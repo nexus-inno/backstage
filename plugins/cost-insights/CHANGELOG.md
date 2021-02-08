@@ -1,5 +1,13 @@
 # @backstage/plugin-cost-insights
 
+## 0.8.1
+
+### Patch Changes
+
+- d36660721: Fix snooze quarter option
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.8.0
 
 ### Minor Changes

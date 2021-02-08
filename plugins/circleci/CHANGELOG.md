@@ -1,5 +1,13 @@
 # @backstage/plugin-circleci
 
+## 0.2.8
+
+### Patch Changes
+
+- 6b26c9f41: Migrated to new composability API, exporting the plugin instance as `circleCIPlugin`, the entity page content as `EntityCircleCIContent`, and entity conditional as `isCircleCIAvailable`.
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.2.7
 
 ### Patch Changes

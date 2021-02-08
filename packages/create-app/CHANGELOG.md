@@ -1,5 +1,58 @@
 # @backstage/create-app
 
+## 1.0.0
+
+### Patch Changes
+
+- 615103a63: Pass on plugin database management instance that is now required by the scaffolder plugin.
+
+  To apply this change to an existing application, add the following to `src/plugins/scaffolder.ts`:
+
+  ```diff
+  export default async function createPlugin({
+    logger,
+    config,
+  +  database,
+  }: PluginEnvironment) {
+
+  // ...omitted...
+
+    return await createRouter({
+      preparers,
+      templaters,
+      publishers,
+      logger,
+      config,
+      dockerClient,
+      entityClient,
+  +    database,
+    });
+  }
+  ```
+
+- Updated dependencies [6b26c9f41]
+- Updated dependencies [b3f0c3811]
+- Updated dependencies [d2441aee3]
+- Updated dependencies [fb53eb7cb]
+- Updated dependencies [615103a63]
+- Updated dependencies [41af18227]
+- Updated dependencies [82b2c11b6]
+- Updated dependencies [965e200c6]
+- Updated dependencies [b51ee6ece]
+- Updated dependencies [f5f45744e]
+- Updated dependencies [82b2c11b6]
+- Updated dependencies [8f3443427]
+- Updated dependencies [b51ee6ece]
+  - @backstage/plugin-circleci@0.2.8
+  - @backstage/plugin-search@0.3.0
+  - @backstage/plugin-catalog-backend@0.6.1
+  - @backstage/plugin-scaffolder-backend@0.7.0
+  - @backstage/plugin-techdocs@0.5.6
+  - @backstage/backend-common@0.5.3
+  - @backstage/test-utils@0.1.7
+  - @backstage/plugin-github-actions@0.3.2
+  - @backstage/core@0.6.1
+
 ## 0.3.8
 
 ### Patch Changes

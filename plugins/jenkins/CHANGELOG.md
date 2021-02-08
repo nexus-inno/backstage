@@ -1,5 +1,13 @@
 # @backstage/plugin-jenkins
 
+## 0.3.9
+
+### Patch Changes
+
+- 025c0c7bf: Migrate to new composability API, exporting the plugin instance as `jenkinsPlugin`, the entity content as `EntityJenkinsContent`, the entity conditional as `isJenkinsAvailable`, and the entity card as `EntityLatestJenkinsRunCard`.
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.3.8
 
 ### Patch Changes

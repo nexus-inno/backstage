@@ -1,5 +1,19 @@
 # @backstage/plugin-scaffolder-backend
 
+## 0.7.0
+
+### Minor Changes
+
+- 615103a63: Introduced `v2` Scaffolder REST API, which uses an implementation that is database backed, making the scaffolder instances stateless. The `createRouter` function now requires a `PluginDatabaseManager` instance to be passed in, commonly available as `database` in the plugin environment in the backend.
+
+  This API should be considered unstable until used by the scaffolder frontend.
+
+### Patch Changes
+
+- Updated dependencies [82b2c11b6]
+- Updated dependencies [965e200c6]
+  - @backstage/backend-common@0.5.3
+
 ## 0.6.0
 
 ### Minor Changes
