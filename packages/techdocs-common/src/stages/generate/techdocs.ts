@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-import path from 'path';
-import { Logger } from 'winston';
-import { PassThrough } from 'stream';
+import { ContainerRunner } from '@backstage/backend-common';
 import { Config } from '@backstage/config';
-
-import { GeneratorBase, GeneratorRunOptions } from './types';
+import path from 'path';
+import { PassThrough } from 'stream';
+import { Logger } from 'winston';
 import {
-  runDockerContainer,
-  runCommand,
+  addBuildTimestampMetadata,
   patchMkdocsYmlPreBuild,
+  runCommand,
+  storeEtagMetadata,
 } from './helpers';
+import { GeneratorBase, GeneratorRunOptions } from './types';
 
 type TechdocsGeneratorOptions = {
   // This option enables users to configure if they want to use TechDocs container
@@ -47,21 +48,31 @@ const createStream = (): [string[], PassThrough] => {
 
 export class TechdocsGenerator implements GeneratorBase {
   private readonly logger: Logger;
+  private readonly containerRunner: ContainerRunner;
   private readonly options: TechdocsGeneratorOptions;
 
-  constructor(logger: Logger, config: Config) {
+  constructor({
+    logger,
+    containerRunner,
+    config,
+  }: {
+    logger: Logger;
+    containerRunner: ContainerRunner;
+    config: Config;
+  }) {
     this.logger = logger;
     this.options = {
       runGeneratorIn:
         config.getOptionalString('techdocs.generators.techdocs') ?? 'docker',
     };
+    this.containerRunner = containerRunner;
   }
 
   public async run({
     inputDir,
     outputDir,
-    dockerClient,
     parsedLocationAnnotation,
+    etag,
   }: GeneratorRunOptions): Promise<void> {
     const [log, logStream] = createStream();
 
@@ -75,6 +86,12 @@ export class TechdocsGenerator implements GeneratorBase {
         parsedLocationAnnotation,
       );
     }
+
+    // Directories to bind on container
+    const mountDirs = {
+      [inputDir]: '/input',
+      [outputDir]: '/output',
+    };
 
     try {
       switch (this.options.runGeneratorIn) {
@@ -92,13 +109,15 @@ export class TechdocsGenerator implements GeneratorBase {
           );
           break;
         case 'docker':
-          await runDockerContainer({
+          await this.containerRunner.runContainer({
             imageName: 'spotify/techdocs',
-            args: ['build', '-d', '/result'],
+            args: ['build', '-d', '/output'],
             logStream,
-            docsDir: inputDir,
-            outputDir,
-            dockerClient,
+            mountDirs,
+            workingDir: '/input',
+            // Set the home directory inside the container as something that applications can
+            // write to, otherwise they will just fail trying to write to /
+            envVars: { HOME: '/tmp' },
           });
           this.logger.info(
             `Successfully generated docs from ${inputDir} into ${outputDir} using techdocs-container`,
@@ -113,9 +132,29 @@ export class TechdocsGenerator implements GeneratorBase {
       this.logger.debug(
         `Failed to generate docs from ${inputDir} into ${outputDir}`,
       );
-      this.logger.debug(`Build failed with error: ${log}`);
+      this.logger.error(`Build failed with error: ${log}`);
       throw new Error(
         `Failed to generate docs from ${inputDir} into ${outputDir} with error ${error.message}`,
+      );
+    }
+
+    /**
+     * Post Generate steps
+     */
+
+    // Add build timestamp to techdocs_metadata.json
+    // Creates techdocs_metadata.json if file does not exist.
+    await addBuildTimestampMetadata(
+      path.join(outputDir, 'techdocs_metadata.json'),
+      this.logger,
+    );
+
+    // Add etag of the prepared tree to techdocs_metadata.json
+    // Assumes that the file already exists.
+    if (etag) {
+      await storeEtagMetadata(
+        path.join(outputDir, 'techdocs_metadata.json'),
+        etag,
       );
     }
   }

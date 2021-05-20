@@ -78,13 +78,15 @@ export class AwsAlbAuthProvider implements AuthProviderRouteHandlers {
           payload,
           this.catalogClient,
         );
-        res.send(resolvedEntity);
+        res.json(resolvedEntity);
       } catch (e) {
         this.logger.error('exception occurred during JWT processing', e);
-        res.send(401);
+        res.status(401);
+        res.end();
       }
     } else {
-      res.send(401);
+      res.status(401);
+      res.end();
     }
   }
 
@@ -106,22 +108,26 @@ export class AwsAlbAuthProvider implements AuthProviderRouteHandlers {
   }
 }
 
-export const createAwsAlbProvider = ({
-  logger,
-  catalogApi,
-  config,
-  identityResolver,
-}: AuthProviderFactoryOptions) => {
-  const region = config.getString('region');
-  const issuer = config.getOptionalString('iss');
-  if (identityResolver !== undefined) {
-    return new AwsAlbAuthProvider(logger, catalogApi, {
-      region,
-      issuer,
-      identityResolutionCallback: identityResolver,
-    });
-  }
-  throw new Error(
-    'Identity resolver is required to use this authentication provider',
-  );
+export type AwsAlbProviderOptions = {};
+
+export const createAwsAlbProvider = (_options?: AwsAlbProviderOptions) => {
+  return ({
+    logger,
+    catalogApi,
+    config,
+    identityResolver,
+  }: AuthProviderFactoryOptions) => {
+    const region = config.getString('region');
+    const issuer = config.getOptionalString('iss');
+    if (identityResolver !== undefined) {
+      return new AwsAlbAuthProvider(logger, catalogApi, {
+        region,
+        issuer,
+        identityResolutionCallback: identityResolver,
+      });
+    }
+    throw new Error(
+      'Identity resolver is required to use this authentication provider',
+    );
+  };
 };

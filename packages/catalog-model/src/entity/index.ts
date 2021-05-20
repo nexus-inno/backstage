@@ -17,6 +17,8 @@
 export {
   ENTITY_DEFAULT_NAMESPACE,
   ENTITY_META_GENERATED_FIELDS,
+  VIEW_URL_ANNOTATION,
+  EDIT_URL_ANNOTATION,
 } from './constants';
 export type {
   Entity,
@@ -32,6 +34,7 @@ export {
   parseEntityName,
   parseEntityRef,
   serializeEntityRef,
+  stringifyEntityRef,
 } from './ref';
 export {
   entityHasChanges,

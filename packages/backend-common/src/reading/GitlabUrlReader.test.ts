@@ -20,35 +20,62 @@ import fs from 'fs-extra';
 import mockFs from 'mock-fs';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import os from 'os';
 import path from 'path';
 import { getVoidLogger } from '../logging';
 import { GitlabUrlReader } from './GitlabUrlReader';
-import { ReadTreeResponseFactory } from './tree';
-import { NotModifiedError, NotFoundError } from '../errors';
+import { DefaultReadTreeResponseFactory } from './tree';
+import { NotModifiedError, NotFoundError } from '@backstage/errors';
+import {
+  GitLabIntegration,
+  readGitLabIntegrationConfig,
+} from '@backstage/integration';
 
 const logger = getVoidLogger();
 
-const treeResponseFactory = ReadTreeResponseFactory.create({
+const treeResponseFactory = DefaultReadTreeResponseFactory.create({
   config: new ConfigReader({}),
 });
 
 const gitlabProcessor = new GitlabUrlReader(
-  {
-    host: 'gitlab.com',
-    apiBaseUrl: 'https://gitlab.com/api/v4',
-  },
+  new GitLabIntegration(
+    readGitLabIntegrationConfig(
+      new ConfigReader({
+        host: 'gitlab.com',
+        apiBaseUrl: 'https://gitlab.com/api/v4',
+        baseUrl: 'https://gitlab.com',
+      }),
+    ),
+  ),
   { treeResponseFactory },
 );
 
 const hostedGitlabProcessor = new GitlabUrlReader(
-  {
-    host: 'gitlab.mycompany.com',
-    apiBaseUrl: 'https://gitlab.mycompany.com/api/v4',
-  },
+  new GitLabIntegration(
+    readGitLabIntegrationConfig(
+      new ConfigReader({
+        host: 'gitlab.mycompany.com',
+        apiBaseUrl: 'https://gitlab.mycompany.com/api/v4',
+        baseUrl: 'https://gitlab.mycompany.com',
+      }),
+    ),
+  ),
   { treeResponseFactory },
 );
 
+const tmpDir = os.platform() === 'win32' ? 'C:\\tmp' : '/tmp';
+
 describe('GitlabUrlReader', () => {
+  beforeEach(() => {
+    mockFs({
+      [tmpDir]: mockFs.directory(),
+    });
+  });
+
+  afterEach(() => {
+    mockFs.restore();
+  });
+
   const worker = setupServer();
   msw.setupDefaultHandlers(worker);
 
@@ -154,16 +181,6 @@ describe('GitlabUrlReader', () => {
   });
 
   describe('readTree', () => {
-    beforeEach(() => {
-      mockFs({
-        '/tmp': mockFs.directory(),
-      });
-    });
-
-    afterEach(() => {
-      mockFs.restore();
-    });
-
     const archiveBuffer = fs.readFileSync(
       path.resolve('src', 'reading', '__fixtures__', 'gitlab-archive.zip'),
     );
@@ -173,11 +190,17 @@ describe('GitlabUrlReader', () => {
       default_branch: 'main',
     };
 
-    const branchGitlabApiResponse = {
-      commit: {
+    const commitsGitlabApiResponse = [
+      {
         id: 'sha123abc',
       },
-    };
+    ];
+
+    const specificPathCommitsGitlabApiResponse = [
+      {
+        id: 'sha456def',
+      },
+    ];
 
     beforeEach(() => {
       worker.use(
@@ -204,17 +227,29 @@ describe('GitlabUrlReader', () => {
             ),
         ),
         rest.get(
-          'https://gitlab.com/api/v4/projects/backstage%2Fmock/repository/branches/main',
-          (_, res, ctx) =>
-            res(
-              ctx.status(200),
-              ctx.set('Content-Type', 'application/json'),
-              ctx.json(branchGitlabApiResponse),
-            ),
-        ),
-        rest.get(
-          'https://gitlab.com/api/v4/projects/backstage%2Fmock/repository/branches/branchDoesNotExist',
-          (_, res, ctx) => res(ctx.status(404)),
+          'https://gitlab.com/api/v4/projects/backstage%2Fmock/repository/commits',
+          (req, res, ctx) => {
+            const refName = req.url.searchParams.get('ref_name');
+            if (refName === 'main') {
+              const filepath = req.url.searchParams.get('path');
+              if (filepath === 'testFilepath') {
+                return res(
+                  ctx.status(200),
+                  ctx.set('Content-Type', 'application/json'),
+                  ctx.json(specificPathCommitsGitlabApiResponse),
+                );
+              }
+              return res(
+                ctx.status(200),
+                ctx.set('Content-Type', 'application/json'),
+                ctx.json(commitsGitlabApiResponse),
+              );
+            }
+            if (refName === 'branchDoesNotExist') {
+              return res(ctx.status(404));
+            }
+            return res();
+          },
         ),
         rest.get(
           'https://gitlab.mycompany.com/api/v4/projects/backstage%2Fmock',
@@ -226,13 +261,26 @@ describe('GitlabUrlReader', () => {
             ),
         ),
         rest.get(
-          'https://gitlab.mycompany.com/api/v4/projects/backstage%2Fmock/repository/branches/main',
-          (_, res, ctx) =>
-            res(
-              ctx.status(200),
-              ctx.set('Content-Type', 'application/json'),
-              ctx.json(branchGitlabApiResponse),
-            ),
+          'https://gitlab.mycompany.com/api/v4/projects/backstage%2Fmock/repository/commits',
+          (req, res, ctx) => {
+            const refName = req.url.searchParams.get('ref_name');
+            if (refName === 'main') {
+              const filepath = req.url.searchParams.get('path');
+              if (filepath === 'testFilepath') {
+                return res(
+                  ctx.status(200),
+                  ctx.set('Content-Type', 'application/json'),
+                  ctx.json(specificPathCommitsGitlabApiResponse),
+                );
+              }
+              return res(
+                ctx.status(200),
+                ctx.set('Content-Type', 'application/json'),
+                ctx.json(commitsGitlabApiResponse),
+              );
+            }
+            return res();
+          },
         ),
         rest.get(
           'https://gitlab.mycompany.com/api/v4/projects/backstage%2Fmock/repository/archive.zip?sha=main',
@@ -334,7 +382,7 @@ describe('GitlabUrlReader', () => {
       ).resolves.toBe('# Test\n');
     });
 
-    it('throws a NotModifiedError when given a etag in options', async () => {
+    it('throws a NotModifiedError when given a etag in options matching last commit', async () => {
       const fnGitlab = async () => {
         await gitlabProcessor.readTree('https://gitlab.com/backstage/mock', {
           etag: 'sha123abc',
@@ -346,6 +394,29 @@ describe('GitlabUrlReader', () => {
           'https://gitlab.mycompany.com/backstage/mock',
           {
             etag: 'sha123abc',
+          },
+        );
+      };
+
+      await expect(fnGitlab).rejects.toThrow(NotModifiedError);
+      await expect(fnHostedGitlab).rejects.toThrow(NotModifiedError);
+    });
+
+    it('throws a NotModifiedError when given a etag in options matching last commit affecting specified filepath', async () => {
+      const fnGitlab = async () => {
+        await gitlabProcessor.readTree(
+          'https://gitlab.com/backstage/mock/blob/main/testFilepath',
+          {
+            etag: 'sha456def',
+          },
+        );
+      };
+
+      const fnHostedGitlab = async () => {
+        await hostedGitlabProcessor.readTree(
+          'https://gitlab.mycompany.com/backstage/mock/blob/main/testFilepath',
+          {
+            etag: 'sha456def',
           },
         );
       };
@@ -372,24 +443,93 @@ describe('GitlabUrlReader', () => {
     });
 
     it('should throw error on missing branch', async () => {
-      const fnGithub = async () => {
+      const fnGitlab = async () => {
         await gitlabProcessor.readTree(
           'https://gitlab.com/backstage/mock/tree/branchDoesNotExist',
         );
       };
-      await expect(fnGithub).rejects.toThrow(NotFoundError);
+      await expect(fnGitlab).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('search', () => {
+    const archiveBuffer = fs.readFileSync(
+      path.resolve('src', 'reading', '__fixtures__', 'gitlab-archive.zip'),
+    );
+
+    const projectGitlabApiResponse = {
+      id: 11111111,
+      default_branch: 'main',
+    };
+
+    const commitsGitlabApiResponse = [
+      {
+        id: 'sha123abc',
+      },
+    ];
+
+    beforeEach(() => {
+      worker.use(
+        rest.get(
+          'https://gitlab.com/api/v4/projects/backstage%2Fmock/repository/archive.zip?sha=main',
+          (_, res, ctx) =>
+            res(
+              ctx.status(200),
+              ctx.set('Content-Type', 'application/zip'),
+              ctx.set(
+                'content-disposition',
+                'attachment; filename="mock-main-sha123abc.zip"',
+              ),
+              ctx.body(archiveBuffer),
+            ),
+        ),
+        rest.get(
+          'https://gitlab.com/api/v4/projects/backstage%2Fmock',
+          (_, res, ctx) =>
+            res(
+              ctx.status(200),
+              ctx.set('Content-Type', 'application/json'),
+              ctx.json(projectGitlabApiResponse),
+            ),
+        ),
+        rest.get(
+          'https://gitlab.com/api/v4/projects/backstage%2Fmock/repository/commits',
+          (req, res, ctx) => {
+            const refName = req.url.searchParams.get('ref_name');
+            if (refName === 'main') {
+              return res(
+                ctx.status(200),
+                ctx.set('Content-Type', 'application/json'),
+                ctx.json(commitsGitlabApiResponse),
+              );
+            }
+            return res();
+          },
+        ),
+      );
     });
 
-    it('should throw error when apiBaseUrl is missing', () => {
-      expect(() => {
-        /* eslint-disable no-new */
-        new GitlabUrlReader(
-          {
-            host: 'gitlab.mycompany.com',
-          },
-          { treeResponseFactory },
-        );
-      }).toThrowError('must configure an explicit apiBaseUrl');
+    it('works for the naive case', async () => {
+      const result = await gitlabProcessor.search(
+        'https://gitlab.com/backstage/mock/tree/main/**/index.*',
+      );
+      expect(result.etag).toBe('sha123abc');
+      expect(result.files.length).toBe(1);
+      expect(result.files[0].url).toBe(
+        'https://gitlab.com/backstage/mock/tree/main/docs/index.md',
+      );
+      await expect(result.files[0].content()).resolves.toEqual(
+        Buffer.from('# Test\n'),
+      );
+    });
+
+    it('throws NotModifiedError when same etag', async () => {
+      await expect(
+        gitlabProcessor.search(
+          'https://gitlab.com/backstage/mock/tree/main/**/index.*',
+          { etag: 'sha123abc' },
+        ),
+      ).rejects.toThrow(NotModifiedError);
     });
   });
 });

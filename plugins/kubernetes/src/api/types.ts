@@ -18,7 +18,7 @@ import { createApiRef } from '@backstage/core';
 import {
   KubernetesRequestBody,
   ObjectsByEntityResponse,
-} from '@backstage/plugin-kubernetes-backend';
+} from '@backstage/plugin-kubernetes-common';
 
 export const kubernetesApiRef = createApiRef<KubernetesApi>({
   id: 'plugin.kubernetes.service',
@@ -30,4 +30,5 @@ export interface KubernetesApi {
   getObjectsByEntity(
     requestBody: KubernetesRequestBody,
   ): Promise<ObjectsByEntityResponse>;
+  getClusters(): Promise<{ name: string; authProvider: string }[]>;
 }

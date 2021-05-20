@@ -16,21 +16,21 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { InputError } from '@backstage/backend-common';
+import { InputError } from '@backstage/errors';
 import { PreparerBase, PreparerOptions } from './types';
 
 export class FilePreparer implements PreparerBase {
   async prepare({ url, workspacePath }: PreparerOptions) {
-    if (!url.startsWith('file:///')) {
+    if (!url.startsWith('file://')) {
       throw new InputError(`Wrong location protocol, should be 'file', ${url}`);
     }
 
-    const checkoutDir = path.join(workspacePath, 'checkout');
-    await fs.ensureDir(checkoutDir);
-
     const templatePath = fileURLToPath(url);
 
-    await fs.copy(templatePath, checkoutDir, {
+    const targetDir = path.join(workspacePath, 'template');
+    await fs.ensureDir(targetDir);
+
+    await fs.copy(templatePath, targetDir, {
       recursive: true,
     });
   }

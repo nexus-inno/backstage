@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { createDevApp } from '@backstage/dev-utils';
-import { discoveryApiRef } from '@backstage/core';
 import { CatalogClient } from '@backstage/catalog-client';
+import { configApiRef, discoveryApiRef, identityApiRef } from '@backstage/core';
+import { createDevApp } from '@backstage/dev-utils';
+import { scmIntegrationsApiRef } from '@backstage/integration-react';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { TemplateIndexPage, TemplatePage } from '../src/plugin';
-import { ScaffolderApi, scaffolderApiRef } from '../src';
+import React from 'react';
+import { scaffolderApiRef, ScaffolderClient } from '../src';
+import { ScaffolderPage } from '../src/plugin';
 
 createDevApp()
   .registerApi({
@@ -30,16 +31,18 @@ createDevApp()
   })
   .registerApi({
     api: scaffolderApiRef,
-    deps: { discoveryApi: discoveryApiRef },
-    factory: ({ discoveryApi }) => new ScaffolderApi({ discoveryApi }),
+    deps: {
+      discoveryApi: discoveryApiRef,
+      identityApi: identityApiRef,
+      configApi: configApiRef,
+      scmIntegrationsApi: scmIntegrationsApiRef,
+    },
+    factory: ({ discoveryApi, identityApi, scmIntegrationsApi }) =>
+      new ScaffolderClient({ discoveryApi, identityApi, scmIntegrationsApi }),
   })
   .addPage({
     path: '/create',
     title: 'Create',
-    element: <TemplateIndexPage />,
-  })
-  .addPage({
-    path: '/create/:templateName',
-    element: <TemplatePage />,
+    element: <ScaffolderPage />,
   })
   .render();

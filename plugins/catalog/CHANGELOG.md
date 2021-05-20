@@ -1,5 +1,387 @@
 # @backstage/plugin-catalog
 
+## 0.5.8
+
+### Patch Changes
+
+- a53f3d603: - Added `RelatedEntitesCard` as a base implementation of displaying entities that are related to another entity.
+  - Added `HasResourcesCard` to display resources that are part of a system.
+  - Added `DependsOnComponentsCard` to display components that are dependencies of a component.
+  - Added `DependsOnResourcesCard` to display resources that are dependencies of a component.
+  - Refactored `HasComponentsCard` to use base `RelatedEntitiesCard`. Card remains backwards compatible.
+  - Refactored `HasSubcomponentsCard` to use base `RelatedEntitiesCard`. Card remains backwards compatible.
+  - Refactored `HasSystemsCard` to use base `RelatedEntitiesCard`. Card remains backwards compatible.
+  - Updated the example app to take advantage of these new components.
+- b203699e9: Display warning when Entity has orphan annotation.
+- Updated dependencies [f7f7783a3]
+- Updated dependencies [65e6c4541]
+- Updated dependencies [68fdbf014]
+- Updated dependencies [5da6a561d]
+  - @backstage/catalog-model@0.7.10
+  - @backstage/core@0.7.10
+  - @backstage/integration@0.5.3
+
+## 0.5.7
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 5542de095: This makes the CatalogTable configurable with custom columns, passed through the CatalogPage component rendered on the home page.
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [10c008a3a]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [16be1d093]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+  - @backstage/integration-react@0.1.2
+  - @backstage/plugin-catalog-react@0.1.6
+  - @backstage/catalog-model@0.7.9
+
+## 0.5.6
+
+### Patch Changes
+
+- 19a4dd710: Removed unused `swr` dependency.
+- da546ce00: Support `gridItem` variant for `EntityLinksCard`.
+- e0c9ed759: Add `if` prop to `EntityLayout.Route` to conditionally render tabs
+- 1a142ae8a: Switch out the time-based personal greeting for a plain title on the catalog index page, and remove the clocks for different timezones.
+- Updated dependencies [9afcac5af]
+- Updated dependencies [e0c9ed759]
+- Updated dependencies [6eaecbd81]
+  - @backstage/core@0.7.7
+
+## 0.5.5
+
+### Patch Changes
+
+- 96728a2af: SystemDiagramCard UI improvements
+- 87c4f59de: Add low german greeting
+- Updated dependencies [94da20976]
+- Updated dependencies [d8cc7e67a]
+- Updated dependencies [99fbef232]
+- Updated dependencies [ab07d77f6]
+- Updated dependencies [931b21a12]
+- Updated dependencies [937ed39ce]
+- Updated dependencies [9a9e7a42f]
+- Updated dependencies [50ce875a0]
+  - @backstage/core@0.7.6
+  - @backstage/theme@0.2.6
+
+## 0.5.4
+
+### Patch Changes
+
+- 5d0740563: Implemented missing support for the dependsOn/dependencyOf relationships
+  between `Component` and `Resource` catalog model objects.
+
+  Added support for generating the relevant relationships to the
+  `BuiltinKindsEntityProcessor`, and added simple support for fetching
+  relationships between `Components` and `Resources` for rendering in the
+  system diagram. All catalog-model changes backwards compatible.
+
+- Updated dependencies [bb5055aee]
+- Updated dependencies [d0d1c2f7b]
+- Updated dependencies [5d0740563]
+- Updated dependencies [5cafcf452]
+- Updated dependencies [86a95ba67]
+- Updated dependencies [442f34b87]
+- Updated dependencies [e27cb6c45]
+  - @backstage/catalog-model@0.7.7
+  - @backstage/core@0.7.5
+  - @backstage/catalog-client@0.3.10
+
+## 0.5.3
+
+### Patch Changes
+
+- 98dd5da71: Add support for multiple links to post-scaffold task summary page
+- Updated dependencies [1279a3325]
+- Updated dependencies [4a4681b1b]
+- Updated dependencies [97b60de98]
+- Updated dependencies [b051e770c]
+- Updated dependencies [98dd5da71]
+  - @backstage/core@0.7.4
+  - @backstage/catalog-model@0.7.6
+
+## 0.5.2
+
+### Patch Changes
+
+- aa58c01e2: Adds a new `EntitySystemDiagramCard` component to visually map all elements in a system.
+
+  To use this new component with the legacy composability pattern, you can add a new tab with the component on to the System Entity Page in your `packages/app/src/components/catalog/EntityPage.tsx` file.
+
+  For example,
+
+  ```diff
+   const SystemEntityPage = ({ entity }: { entity: Entity }) => (
+     <EntityPageLayoutWrapper>
+       <EntityPageLayout.Content
+         path="/*"
+         title="Overview"
+         element={<SystemOverviewContent entity={entity} />}
+       />
+  +    <EntityPageLayout.Content
+  +      path="/diagram/*"
+  +      title="Diagram"
+  +      element={<EntitySystemDiagramCard />}
+  +    />
+     </EntityPageLayoutWrapper>
+   );
+  ```
+
+- 676ede643: Added the `getOriginLocationByEntity` and `removeLocationById` methods to the catalog client
+- 8bee6a131: unify how the owner and lifecycle header labels are made
+- 676ede643: Improve the unregister dialog, to support both unregistration and plain deletion
+- Updated dependencies [676ede643]
+- Updated dependencies [9f48b548c]
+- Updated dependencies [b196a4569]
+- Updated dependencies [8488a1a96]
+  - @backstage/catalog-client@0.3.9
+  - @backstage/plugin-catalog-react@0.1.4
+  - @backstage/catalog-model@0.7.5
+
+## 0.5.1
+
+### Patch Changes
+
+- 4d248725e: Temporarily add `UNSTABLE_extraContextMenuItems` to the entity layout, so that we could detach the catalog plugin from the dependency on the badges plugin
+- 687f066e1: Add icon for entity badge menu
+- Updated dependencies [01ccef4c7]
+- Updated dependencies [fcc3ada24]
+- Updated dependencies [4618774ff]
+- Updated dependencies [df59930b3]
+  - @backstage/plugin-catalog-react@0.1.3
+  - @backstage/core@0.7.3
+  - @backstage/theme@0.2.5
+
+## 0.5.0
+
+### Minor Changes
+
+- 3385b374b: Use `scmIntegrationsApiRef` from the new `@backstage/integration-react`.
+
+### Patch Changes
+
+- 633a31fec: Add the ability to change the initially selected filter, if not set it still defaults to `owned`.
+
+  ```js
+  <Route
+    path="/catalog"
+    element={<CatalogIndexPage initiallySelectedFilter="all" />}
+  />
+  ```
+
+- 9ca0e4009: use local version of lowerCase and upperCase methods
+- 8686eb38c: Use errors from `@backstage/errors`
+- Updated dependencies [8686eb38c]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [9ca0e4009]
+- Updated dependencies [34ff49b0f]
+  - @backstage/catalog-client@0.3.8
+  - @backstage/core@0.7.2
+  - @backstage/plugin-catalog-react@0.1.2
+
+## 0.4.2
+
+### Patch Changes
+
+- 4f3d0dce0: This is a quick fix (while #2791 is being implemented) to make it possible view non well known component types listed in the catalog index page. It buckets any component entities that are not a `service`, `library`, or `documentation` into the `Other` tab. It also displays a `Type` column when on Other tab.
+- 0b42fff22: Make use of parseLocationReference/stringifyLocationReference
+- 9f7dc10fb: Show a Not Found message when navigating to a nonexistent entity
+- 93c62c755: Move logic for generating URLs for the view, edit and source links of catalog
+  entities from the catalog frontend into the backend. This is done using the
+  existing support for the `backstage.io/view-url`, `backstage.io/edit-url` and
+  `backstage.io/source-location` annotations that are now filled by the
+  `AnnotateLocationEntityProcessor`. If these annotations are missing or empty,
+  the UI disables the related controls.
+- Updated dependencies [277644e09]
+- Updated dependencies [52f613030]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [ff4d666ab]
+- Updated dependencies [905cbfc96]
+- Updated dependencies [2089de76b]
+- Updated dependencies [d4e77ec5f]
+- Updated dependencies [dc1fc92c8]
+  - @backstage/integration@0.5.1
+  - @backstage/catalog-model@0.7.4
+  - @backstage/catalog-client@0.3.7
+  - @backstage/core@0.7.1
+  - @backstage/theme@0.2.4
+
+## 0.4.1
+
+### Patch Changes
+
+- 32a003973: Update messaging when no entities are in a table.
+- 40c0fdbaa: Make the external `createComponent` route optional, hiding the "Create Component" button if it isn't bound.
+- 10362e9eb: Use entity relation for the owner of an entity in the catalog entity page header.
+- b33e553b2: Removed fullScreen property from UnregisterEntity Dialog modal.
+- Updated dependencies [12d8f27a6]
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [9d455f69a]
+- Updated dependencies [4c049a1a1]
+- Updated dependencies [02816ecd7]
+  - @backstage/catalog-model@0.7.3
+  - @backstage/core@0.7.0
+  - @backstage/plugin-catalog-react@0.1.1
+
+## 0.4.0
+
+### Minor Changes
+
+- a5f42cf66: The Scaffolder and Catalog plugins have been migrated to partially require use of the [new composability API](https://backstage.io/docs/plugins/composability). The Scaffolder used to register its pages using the deprecated route registration plugin API, but those registrations have been removed. This means you now need to add the Scaffolder plugin page to the app directly.
+
+  The page is imported from the Scaffolder plugin and added to the `<FlatRoutes>` component:
+
+  ```tsx
+  <Route path="/create" element={<ScaffolderPage />} />
+  ```
+
+  The Catalog plugin has also been migrated to use an [external route reference](https://backstage.io/docs/plugins/composability#binding-external-routes-in-the-app) to dynamically link to the create component page. This means you need to migrate the catalog plugin to use the new extension components, as well as bind the external route.
+
+  To use the new extension components, replace existing usage of the `CatalogRouter` with the following:
+
+  ```tsx
+  <Route path="/catalog" element={<CatalogIndexPage />} />
+  <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />}>
+    <EntityPage />
+  </Route>
+  ```
+
+  And to bind the external route from the catalog plugin to the scaffolder template index page, make sure you have the appropriate imports and add the following to the `createApp` call:
+
+  ```ts
+  import { catalogPlugin } from '@backstage/plugin-catalog';
+  import { scaffolderPlugin } from '@backstage/plugin-scaffolder';
+
+  const app = createApp({
+    // ...
+    bindRoutes({ bind }) {
+      bind(catalogPlugin.externalRoutes, {
+        createComponent: scaffolderPlugin.routes.root,
+      });
+    },
+  });
+  ```
+
+- d0760ecdf: Moved common useStarredEntities hook to plugin-catalog-react
+
+### Patch Changes
+
+- d6593abe6: Remove domain column from `HasSystemsCard` and system from `HasComponentsCard`,
+  `HasSubcomponentsCard`, and `HasApisCard`.
+- bad21a085: Implement annotations for customising Entity URLs in the Catalog pages.
+- 437bac549: Make the description column in the catalog table and api-docs table use up as
+  much space as possible before hiding overflowing text.
+- 5469a9761: Changes made in CatalogTable and ApiExplorerTable for using the OverflowTooltip component for truncating large description and showing tooltip on hover-over.
+- 60d1bc3e7: Fix Japanese Good Morning
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [d0760ecdf]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [88f1f1b60]
+- Updated dependencies [bad21a085]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [5c2e2863f]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core@0.6.3
+  - @backstage/plugin-catalog-react@0.1.0
+  - @backstage/catalog-model@0.7.2
+
+## 0.3.2
+
+### Patch Changes
+
+- 32a950409: Hide the kind of the owner if it's the default kind for the `ownedBy`
+  relationship (group).
+- f10950bd2: Minor refactoring of BackstageApp.getSystemIcons to support custom registered
+  icons. Custom Icons can be added using:
+
+  ```tsx
+  import AlarmIcon from '@material-ui/icons/Alarm';
+  import MyPersonIcon from './MyPerson';
+
+  const app = createApp({
+    icons: {
+      user: MyPersonIcon // override system icon
+      alert: AlarmIcon, // Custom icon
+    },
+  });
+  ```
+
+- 914c89b13: Remove the "Move repository" menu entry from the catalog page, as it's just a placeholder.
+- 0af242b6d: Introduce new cards to `@backstage/plugin-catalog` that can be added to entity pages:
+
+  - `EntityHasSystemsCard` to display systems of a domain.
+  - `EntityHasComponentsCard` to display components of a system.
+  - `EntityHasSubcomponentsCard` to display subcomponents of a subcomponent.
+  - In addition, `EntityHasApisCard` to display APIs of a system is added to `@backstage/plugin-api-docs`.
+
+  `@backstage/plugin-catalog-react` now provides an `EntityTable` to build own cards for entities.
+  The styling of the tables and new cards was also applied to the existing `EntityConsumedApisCard`,
+  `EntityConsumingComponentsCard`, `EntityProvidedApisCard`, and `EntityProvidingComponentsCard`.
+
+- f4c2bcf54: Use a more strict type for `variant` of cards.
+- 53b69236d: Migrate about card to new composability API, exporting the entity cards as `EntityAboutCard`.
+- Updated dependencies [6c4a76c59]
+- Updated dependencies [fd3f2a8c0]
+- Updated dependencies [d34d26125]
+- Updated dependencies [0af242b6d]
+- Updated dependencies [f4c2bcf54]
+- Updated dependencies [10a0124e0]
+- Updated dependencies [07e226872]
+- Updated dependencies [f62e7abe5]
+- Updated dependencies [96f378d10]
+- Updated dependencies [688b73110]
+  - @backstage/plugin-scaffolder@0.5.1
+  - @backstage/core@0.6.2
+  - @backstage/plugin-catalog-react@0.0.4
+
+## 0.3.1
+
+### Patch Changes
+
+- 6ed2b47d6: Include Backstage identity token in requests to backend plugins.
+- ca559171b: bug fix: 3310 fixes reloading entities with the default owned filter
+- f5e564cd6: Improve display of error messages
+- 1df75733e: Adds an `EntityLinksCard` component to display `entity.metadata.links` on entity pages. The new component is a companion for the new [Entity Links](https://backstage.io/docs/features/software-catalog/descriptor-format#links-optional) catalog model addition.
+
+  Here is an example usage within an `EntityPage.tsx`.
+
+  ```tsx
+  // in packages/app/src/components/catalog/EntityPage.tsx
+  const ComponentOverviewContent = ({ entity }: { entity: Entity }) => (
+    <Grid container spacing={3} alignItems="stretch">
+      <Grid item md={4} sm={6}>
+        <EntityLinksCard />
+        // or ...
+        <EntityLinksCard cols={{ md: 2, lg: 3, xl: 4 }} />
+      </Grid>
+    </Grid>
+  );
+  ```
+
+- e5da858d7: Removed unused functions and the moment library. #4278
+- 9230d07e7: Fix whitespace around variable in unregister error dialog box
+- Updated dependencies [6ed2b47d6]
+- Updated dependencies [72b96e880]
+- Updated dependencies [19d354c78]
+- Updated dependencies [b51ee6ece]
+  - @backstage/catalog-client@0.3.6
+  - @backstage/plugin-scaffolder@0.5.0
+  - @backstage/plugin-catalog-react@0.0.3
+  - @backstage/core@0.6.1
+
 ## 0.3.0
 
 ### Minor Changes

@@ -20,19 +20,30 @@ import {
   ContentHeader,
   errorApiRef,
   SupportButton,
+  TableColumn,
   useApi,
+  useRouteRef,
 } from '@backstage/core';
-import { catalogApiRef, isOwnerOf } from '@backstage/plugin-catalog-react';
-import { rootRoute as scaffolderRootRoute } from '@backstage/plugin-scaffolder';
+import {
+  catalogApiRef,
+  isOwnerOf,
+  useStarredEntities,
+} from '@backstage/plugin-catalog-react';
+
 import { Button, makeStyles } from '@material-ui/core';
 import SettingsIcon from '@material-ui/icons/Settings';
 import StarIcon from '@material-ui/icons/Star';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { EntityFilterGroupsProvider, useFilteredEntities } from '../../filter';
-import { useStarredEntities } from '../../hooks/useStarredEntities';
-import { ButtonGroup, CatalogFilter } from '../CatalogFilter/CatalogFilter';
+import { createComponentRouteRef } from '../../routes';
+import {
+  ButtonGroup,
+  CatalogFilter,
+  CatalogFilterType,
+} from '../CatalogFilter/CatalogFilter';
 import { CatalogTable } from '../CatalogTable/CatalogTable';
+import { EntityRow } from '../CatalogTable/types';
 import { ResultsFilter } from '../ResultsFilter/ResultsFilter';
 import { useOwnUser } from '../useOwnUser';
 import CatalogLayout from './CatalogLayout';
@@ -50,7 +61,12 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CatalogPageContents = () => {
+export type CatalogPageProps = {
+  initiallySelectedFilter?: string;
+  columns?: TableColumn<EntityRow>[];
+};
+
+const CatalogPageContents = (props: CatalogPageProps) => {
   const styles = useStyles();
   const {
     loading,
@@ -65,9 +81,14 @@ const CatalogPageContents = () => {
   const errorApi = useApi(errorApiRef);
   const { isStarredEntity } = useStarredEntities();
   const [selectedTab, setSelectedTab] = useState<string>();
-  const [selectedSidebarItem, setSelectedSidebarItem] = useState<string>();
+  const [
+    selectedSidebarItem,
+    setSelectedSidebarItem,
+  ] = useState<CatalogFilterType>();
   const orgName = configApi.getOptionalString('organization.name') ?? 'Company';
-
+  const initiallySelectedFilter =
+    selectedSidebarItem?.id ?? props.initiallySelectedFilter ?? 'owned';
+  const createComponentLink = useRouteRef(createComponentRouteRef);
   const addMockData = useCallback(async () => {
     try {
       const promises: Promise<unknown>[] = [];
@@ -156,14 +177,16 @@ const CatalogPageContents = () => {
       />
       <Content>
         <ContentHeader title={selectedTab ?? ''}>
-          <Button
-            component={RouterLink}
-            variant="contained"
-            color="primary"
-            to={scaffolderRootRoute.path}
-          >
-            Create Component
-          </Button>
+          {createComponentLink && (
+            <Button
+              component={RouterLink}
+              variant="contained"
+              color="primary"
+              to={createComponentLink()}
+            >
+              Create Component
+            </Button>
+          )}
           {showAddExampleEntities && (
             <Button
               className={styles.buttonSpacing}
@@ -180,13 +203,17 @@ const CatalogPageContents = () => {
           <div>
             <CatalogFilter
               buttonGroups={filterGroups}
-              onChange={({ label }) => setSelectedSidebarItem(label)}
-              initiallySelected="owned"
+              onChange={({ label, id }) =>
+                setSelectedSidebarItem({ label, id })
+              }
+              initiallySelected={initiallySelectedFilter}
             />
             <ResultsFilter availableTags={availableTags} />
           </div>
           <CatalogTable
-            titlePreamble={selectedSidebarItem ?? ''}
+            titlePreamble={selectedSidebarItem?.label ?? ''}
+            view={selectedTab}
+            columns={props.columns}
             entities={matchingEntities}
             loading={loading}
             error={error}
@@ -197,8 +224,8 @@ const CatalogPageContents = () => {
   );
 };
 
-export const CatalogPage = () => (
+export const CatalogPage = (props: CatalogPageProps) => (
   <EntityFilterGroupsProvider>
-    <CatalogPageContents />
+    <CatalogPageContents {...props} />
   </EntityFilterGroupsProvider>
 );

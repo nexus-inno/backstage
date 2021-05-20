@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 import { Entity } from '@backstage/catalog-model';
-import { configApiRef, Link, useApi } from '@backstage/core';
+import { configApiRef, Breadcrumbs, Link, useApi } from '@backstage/core';
 import { readGitHubIntegrationConfigs } from '@backstage/integration';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
-  Breadcrumbs,
   CircularProgress,
   LinearProgress,
   Link as MaterialLink,
@@ -89,8 +88,8 @@ const StepView = ({ step }: { step: Step }) => {
       </TableCell>
       <TableCell>
         <WorkflowRunStatus
-          status={step.status.toUpperCase()}
-          conclusion={step.conclusion?.toUpperCase()}
+          status={step.status.toLocaleUpperCase('en-US')}
+          conclusion={step.conclusion?.toLocaleUpperCase('en-US')}
         />
       </TableCell>
     </TableRow>
@@ -184,10 +183,12 @@ export const WorkflowRunDetails = ({ entity }: { entity: Entity }) => {
   }
   return (
     <div className={classes.root}>
-      <Breadcrumbs aria-label="breadcrumb">
-        <Link to="..">Workflow runs</Link>
-        <Typography>Workflow run details</Typography>
-      </Breadcrumbs>
+      <Box mb={3}>
+        <Breadcrumbs aria-label="breadcrumb">
+          <Link to="..">Workflow runs</Link>
+          <Typography>Workflow run details</Typography>
+        </Breadcrumbs>
+      </Box>
       <TableContainer component={Paper} className={classes.table}>
         <Table>
           <TableBody>
@@ -201,13 +202,19 @@ export const WorkflowRunDetails = ({ entity }: { entity: Entity }) => {
               <TableCell>
                 <Typography noWrap>Message</Typography>
               </TableCell>
-              <TableCell>{details.value?.head_commit.message}</TableCell>
+              <TableCell>{details.value?.head_commit?.message}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
                 <Typography noWrap>Commit ID</Typography>
               </TableCell>
-              <TableCell>{details.value?.head_commit.id}</TableCell>
+              <TableCell>{details.value?.head_commit?.id}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <Typography noWrap>Workflow</Typography>
+              </TableCell>
+              <TableCell>{details.value?.name}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -224,7 +231,7 @@ export const WorkflowRunDetails = ({ entity }: { entity: Entity }) => {
               <TableCell>
                 <Typography noWrap>Author</Typography>
               </TableCell>
-              <TableCell>{`${details.value?.head_commit.author?.name} (${details.value?.head_commit.author?.email})`}</TableCell>
+              <TableCell>{`${details.value?.head_commit?.author?.name} (${details.value?.head_commit?.author?.email})`}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>

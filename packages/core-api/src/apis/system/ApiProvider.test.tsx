@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { Context, useContext } from 'react';
 import { ApiProvider, useApi, withApis } from './ApiProvider';
 import { createApiRef } from './ApiRef';
 import { ApiRegistry } from './ApiRegistry';
 import { render } from '@testing-library/react';
 import { withLogCollector } from '@backstage/test-utils-core';
+import { getGlobalSingleton } from '../../lib/globalObject';
+import { ApiHolder, ApiRef } from './types';
+import { VersionedValue } from '../../lib/versionedValues';
 
 describe('ApiProvider', () => {
   type Api = () => string;
@@ -108,11 +111,11 @@ describe('ApiProvider', () => {
       withLogCollector(['error'], () => {
         expect(() => {
           render(<MyHookConsumer />);
-        }).toThrow('No ApiProvider available in react context');
+        }).toThrow(/^No ApiProvider available in react context. /);
       }).error,
     ).toEqual([
       expect.stringMatching(
-        /^Error: Uncaught \[Error: No ApiProvider available in react context\]/,
+        /^Error: Uncaught \[Error: No ApiProvider available in react context. /,
       ),
       expect.stringMatching(
         /^The above error occurred in the <MyHookConsumer> component/,
@@ -123,11 +126,11 @@ describe('ApiProvider', () => {
       withLogCollector(['error'], () => {
         expect(() => {
           render(<MyHocConsumer />);
-        }).toThrow('No ApiProvider available in react context');
+        }).toThrow(/^No ApiProvider available in react context. /);
       }).error,
     ).toEqual([
       expect.stringMatching(
-        /^Error: Uncaught \[Error: No ApiProvider available in react context\]/,
+        /^Error: Uncaught \[Error: No ApiProvider available in react context. /,
       ),
       expect.stringMatching(
         /^The above error occurred in the <withApis\(Component\)> component/,
@@ -173,5 +176,37 @@ describe('ApiProvider', () => {
         /^The above error occurred in the <withApis\(Component\)> component/,
       ),
     ]);
+  });
+});
+
+describe('v1 consumer', () => {
+  const ApiContext = getGlobalSingleton<
+    Context<VersionedValue<{ 1: ApiHolder }>>
+  >('api-context');
+
+  function useMockApiV1<T>(apiRef: ApiRef<T>): T {
+    const impl = useContext(ApiContext)?.atVersion(1)?.get(apiRef);
+    if (!impl) {
+      throw new Error('no impl');
+    }
+    return impl;
+  }
+
+  type Api = () => string;
+  const apiRef = createApiRef<Api>({ id: 'x', description: '' });
+  const registry = ApiRegistry.with(apiRef, () => 'hello');
+
+  const MyHookConsumerV1 = () => {
+    const api = useMockApiV1(apiRef);
+    return <p>hook message: {api()}</p>;
+  };
+
+  it('should provide apis', () => {
+    const renderedHook = render(
+      <ApiProvider apis={registry}>
+        <MyHookConsumerV1 />
+      </ApiProvider>,
+    );
+    renderedHook.getByText('hook message: hello');
   });
 });

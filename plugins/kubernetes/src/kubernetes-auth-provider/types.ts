@@ -15,7 +15,7 @@
  */
 
 import { createApiRef } from '@backstage/core';
-import { KubernetesRequestBody } from '@backstage/plugin-kubernetes-backend';
+import { KubernetesRequestBody } from '@backstage/plugin-kubernetes-common';
 
 export interface KubernetesAuthProvider {
   decorateRequestBodyForAuth(
@@ -23,12 +23,13 @@ export interface KubernetesAuthProvider {
   ): Promise<KubernetesRequestBody>;
 }
 
-export const kubernetesAuthProvidersApiRef = createApiRef<
-  KubernetesAuthProvidersApi
->({
-  id: 'plugin.kubernetes-auth-providers.service',
-  description: 'Used by the Kubernetes plugin to fetch KubernetesAuthProviders',
-});
+export const kubernetesAuthProvidersApiRef = createApiRef<KubernetesAuthProvidersApi>(
+  {
+    id: 'plugin.kubernetes-auth-providers.service',
+    description:
+      'Used by the Kubernetes plugin to fetch KubernetesAuthProviders',
+  },
+);
 
 export interface KubernetesAuthProvidersApi {
   decorateRequestBodyForAuth(

@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { JsonObject } from '@backstage/config';
 import { Logger } from 'winston';
 import {
   CompletedTaskState,
   Task,
+  TaskSecrets,
   TaskSpec,
   TaskStore,
   TaskBroker,
   DispatchResult,
   DbTaskEventRow,
+  DbTaskRow,
 } from './types';
 
 export class TaskAgent implements Task {
@@ -46,6 +49,10 @@ export class TaskAgent implements Task {
     return this.state.spec;
   }
 
+  get secrets() {
+    return this.state.secrets;
+  }
+
   async getWorkspaceName() {
     return this.state.taskId;
   }
@@ -54,18 +61,24 @@ export class TaskAgent implements Task {
     return this.isDone;
   }
 
-  async emitLog(message: string): Promise<void> {
+  async emitLog(message: string, metadata?: JsonObject): Promise<void> {
     await this.storage.emitLogEvent({
       taskId: this.state.taskId,
-      body: { message },
+      body: { message, ...metadata },
     });
   }
 
-  async complete(result: CompletedTaskState): Promise<void> {
+  async complete(
+    result: CompletedTaskState,
+    metadata?: JsonObject,
+  ): Promise<void> {
     await this.storage.completeTask({
       taskId: this.state.taskId,
       status: result === 'failed' ? 'failed' : 'completed',
-      eventBody: { message: `Run completed with status: ${result}` },
+      eventBody: {
+        message: `Run completed with status: ${result}`,
+        ...metadata,
+      },
     });
     this.isDone = true;
     if (this.heartbeatTimeoutId) {
@@ -93,6 +106,7 @@ export class TaskAgent implements Task {
 interface TaskState {
   spec: TaskSpec;
   taskId: string;
+  secrets?: TaskSecrets;
 }
 
 function defer() {
@@ -118,6 +132,7 @@ export class StorageTaskBroker implements TaskBroker {
           {
             taskId: pendingTask.id,
             spec: pendingTask.spec,
+            secrets: pendingTask.secrets,
           },
           this.storage,
           this.logger,
@@ -128,12 +143,19 @@ export class StorageTaskBroker implements TaskBroker {
     }
   }
 
-  async dispatch(spec: TaskSpec): Promise<DispatchResult> {
-    const taskRow = await this.storage.createTask(spec);
+  async dispatch(
+    spec: TaskSpec,
+    secrets?: TaskSecrets,
+  ): Promise<DispatchResult> {
+    const taskRow = await this.storage.createTask(spec, secrets);
     this.signalDispatch();
     return {
       taskId: taskRow.taskId,
     };
+  }
+
+  async get(taskId: string): Promise<DbTaskRow> {
+    return this.storage.getTask(taskId);
   }
 
   observe(

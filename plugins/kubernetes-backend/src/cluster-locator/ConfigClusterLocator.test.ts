@@ -24,9 +24,7 @@ describe('ConfigClusterLocator', () => {
       clusters: [],
     });
 
-    const sut = ConfigClusterLocator.fromConfig(
-      config.getConfigArray('clusters'),
-    );
+    const sut = ConfigClusterLocator.fromConfig(config);
 
     const result = await sut.getClusters();
 
@@ -44,9 +42,7 @@ describe('ConfigClusterLocator', () => {
       ],
     });
 
-    const sut = ConfigClusterLocator.fromConfig(
-      config.getConfigArray('clusters'),
-    );
+    const sut = ConfigClusterLocator.fromConfig(config);
 
     const result = await sut.getClusters();
 
@@ -56,6 +52,7 @@ describe('ConfigClusterLocator', () => {
         serviceAccountToken: undefined,
         url: 'http://localhost:8080',
         authProvider: 'serviceAccount',
+        skipTLSVerify: false,
       },
     ]);
   });
@@ -68,18 +65,18 @@ describe('ConfigClusterLocator', () => {
           serviceAccountToken: 'token',
           url: 'http://localhost:8080',
           authProvider: 'serviceAccount',
+          skipTLSVerify: false,
         },
         {
           name: 'cluster2',
           url: 'http://localhost:8081',
           authProvider: 'google',
+          skipTLSVerify: true,
         },
       ],
     });
 
-    const sut = ConfigClusterLocator.fromConfig(
-      config.getConfigArray('clusters'),
-    );
+    const sut = ConfigClusterLocator.fromConfig(config);
 
     const result = await sut.getClusters();
 
@@ -89,12 +86,14 @@ describe('ConfigClusterLocator', () => {
         serviceAccountToken: 'token',
         url: 'http://localhost:8080',
         authProvider: 'serviceAccount',
+        skipTLSVerify: false,
       },
       {
         name: 'cluster2',
         serviceAccountToken: undefined,
         url: 'http://localhost:8081',
         authProvider: 'google',
+        skipTLSVerify: true,
       },
     ]);
   });

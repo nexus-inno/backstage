@@ -24,6 +24,8 @@ describe('CatalogIdentityClient', () => {
     getEntityByName: jest.fn(),
     getEntities: jest.fn(),
     addLocation: jest.fn(),
+    removeLocationById: jest.fn(),
+    getOriginLocationByEntity: jest.fn(),
     getLocationByEntity: jest.fn(),
     removeEntityByUid: jest.fn(),
   };
@@ -38,11 +40,14 @@ describe('CatalogIdentityClient', () => {
 
     client.findUser({ annotations: { key: 'value' } });
 
-    expect(catalogApi.getEntities).toBeCalledWith({
-      filter: {
-        kind: 'user',
-        'metadata.annotations.key': 'value',
+    expect(catalogApi.getEntities).toBeCalledWith(
+      {
+        filter: {
+          kind: 'user',
+          'metadata.annotations.key': 'value',
+        },
       },
-    });
+      undefined,
+    );
   });
 });

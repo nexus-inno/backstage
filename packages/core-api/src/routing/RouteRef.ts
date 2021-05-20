@@ -14,19 +14,38 @@
  * limitations under the License.
  */
 
-import { RouteRef } from './types';
-import { IconComponent } from '../icons';
+import {
+  RouteRef,
+  SubRouteRef,
+  ExternalRouteRef,
+  routeRefType,
+  AnyParams,
+  ParamKeys,
+  OptionalParams,
+} from './types';
+import { IconComponent } from '../icons/types';
 
-export type RouteRefConfig<Params extends { [param in string]: string }> = {
-  params?: Array<keyof Params>;
-  /** @deprecated Route refs no longer decide their own path */
+// TODO(Rugvip): Remove this in the next breaking release, it's exported but unused
+export type RouteRefConfig<Params extends AnyParams> = {
+  params?: ParamKeys<Params>;
   path?: string;
   icon?: IconComponent;
   title: string;
 };
 
-export class AbsoluteRouteRef<Params extends { [param in string]: string }> {
-  constructor(private readonly config: RouteRefConfig<Params>) {}
+export class RouteRefImpl<Params extends AnyParams>
+  implements RouteRef<Params> {
+  readonly [routeRefType] = 'absolute';
+
+  constructor(
+    private readonly id: string,
+    readonly params: ParamKeys<Params>,
+    private readonly config: {
+      path?: string;
+      icon?: IconComponent;
+      title?: string;
+    },
+  ) {}
 
   get icon() {
     return this.config.icon;
@@ -38,11 +57,11 @@ export class AbsoluteRouteRef<Params extends { [param in string]: string }> {
   }
 
   get title() {
-    return this.config.title;
+    return this.config.title ?? this.id;
   }
 
   toString() {
-    return `routeRef{title=${this.title}}`;
+    return `routeRef{type=absolute,id=${this.id}}`;
   }
 }
 
@@ -55,23 +74,33 @@ export function createRouteRef<
   // Param = {} if the params array is empty.
   ParamKey extends string = never
 >(config: {
+  /** The id of the route ref, used to identify it when printed */
+  id?: string;
+  /** A list of parameter names that the path that this route ref is bound to must contain */
   params?: ParamKey[];
   /** @deprecated Route refs no longer decide their own path */
   path?: string;
+  /** @deprecated Route refs no longer decide their own icon */
   icon?: IconComponent;
-  title: string;
-}): RouteRef<Params> {
-  return new AbsoluteRouteRef<Params>(config);
-}
-
-export class ExternalRouteRef {
-  private constructor() {}
-
-  toString() {
-    return `externalRouteRef{}`;
+  /** @deprecated Route refs no longer decide their own title */
+  title?: string;
+}): RouteRef<OptionalParams<Params>> {
+  const id = config.id || config.title;
+  if (!id) {
+    throw new Error('RouteRef must be provided a non-empty id');
   }
+  return new RouteRefImpl(
+    id,
+    (config.params ?? []) as ParamKeys<OptionalParams<Params>>,
+    config,
+  );
 }
 
-export function createExternalRouteRef(): ExternalRouteRef {
-  return new ((ExternalRouteRef as unknown) as { new (): ExternalRouteRef })();
+export function isRouteRef<Params extends AnyParams>(
+  routeRef:
+    | RouteRef<Params>
+    | SubRouteRef<Params>
+    | ExternalRouteRef<Params, any>,
+): routeRef is RouteRef<Params> {
+  return routeRef[routeRefType] === 'absolute';
 }

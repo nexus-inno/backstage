@@ -248,7 +248,7 @@ might be linking to, allowing the app to decide the final target. If the
 declare an `ExternalRouteRef` similar to this:
 
 ```ts
-const headerLinkRouteRef = createExternalRouteRef();
+const headerLinkRouteRef = createExternalRouteRef({ id: 'header-link' });
 ```
 
 ### Binding External Routes in the App
@@ -305,6 +305,37 @@ in a different file than the one that creates the plugin instance, for example a
 top-level `routes.ts`. This is to avoid circular imports when you use the route
 references from other parts of the same plugin.
 
+### Optional External Routes
+
+When creating an `ExternalRouteRef` it is possible to mark it as optional:
+
+```ts
+const headerLinkRouteRef = createExternalRouteRef({
+  id: 'header-link',
+  optional: true,
+});
+```
+
+An external route that is marked as optional is not required to be bound in the
+app, allowing it to be used as a switch for whether a particular link should be
+displayed or action should be taken.
+
+When calling `useRouteRef` with an optional external route, its return signature
+is changed to `RouteFunc | undefined`, allowing for logic like this:
+
+```tsx
+const MyComponent = () => {
+  const headerLink = useRouteRef(headerLinkRouteRef);
+
+  return (
+    <header>
+      My Header
+      {headerLink && <a href={headerLink()}>External Link</a>}
+    </header>
+  );
+};
+```
+
 ### Parameterized Routes
 
 A new addition to `RouteRef`s is the possibility of adding named and typed
@@ -337,6 +368,52 @@ return (
 It is currently not possible to have parameterized `ExternalRouteRef`s, or to
 bind an external route to a parameterized route, although this may be added in
 the future if needed.
+
+### Subroutes
+
+The last kind of route refs that can be created are `SubRouteRef`s, which can be
+used to create a route ref with a fixed path relative to an absolute `RouteRef`.
+They are useful if you have a page that internally is mounted at a sub route of
+a routable extension component, and you want other plugins to be able to route
+to that page.
+
+For example:
+
+```tsx
+// routes.ts
+const rootRouteRef = createRouteRef({ id: 'root' });
+const detailsRouteRef = createSubRouteRef({
+  id: 'root-sub',
+  parent: rootRouteRef,
+  path: '/details',
+});
+
+// plugin.ts
+export const myPlugin = createPlugin({
+  routes: {
+    root: rootRouteRef,
+    details: detailsRouteRef,
+  },
+});
+
+export const MyPage = myPlugin.provide(
+  createRoutableExtension({
+    component: () => import('./components/MyPage').then(m => m.MyPage),
+    mountPoint: rootRouteRef,
+  }),
+);
+
+// components/MyPage.tsx
+const MyPage = () => (
+  <Routes>
+    {/* myPlugin.routes.root will take the user to this page */}
+    <Route path="/" element={<IndexPage />} />
+
+    {/* myPlugin.routes.details will take the user to this page */}
+    <Route path="/details" element={<DetailsPage />} />
+  </Routes>
+);
+```
 
 ### New Catalog Components
 

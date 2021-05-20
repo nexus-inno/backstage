@@ -28,8 +28,8 @@ export async function loadCliConfig(options: Options) {
   const configPaths = options.args.map(arg => paths.resolveTarget(arg));
 
   // Consider all packages in the monorepo when loading in config
-  const LernaProject = require('@lerna/project');
-  const project = new LernaProject(paths.targetDir);
+  const { Project } = require('@lerna/project');
+  const project = new Project(paths.targetDir);
   const packages = await project.getPackages();
 
   const localPackageNames = options.fromPackage
@@ -48,8 +48,10 @@ export async function loadCliConfig(options: Options) {
     configPaths,
   });
 
-  console.log(
-    `Loaded config from ${appConfigs.map(c => c.context).join(', ')}`,
+  // printing to stderr to not clobber stdout in case the cli command
+  // outputs structured data (e.g. as config:schema does)
+  process.stderr.write(
+    `Loaded config from ${appConfigs.map(c => c.context).join(', ')}\n`,
   );
 
   try {
@@ -75,7 +77,7 @@ export async function loadCliConfig(options: Options) {
 }
 
 function findPackages(packages: any[], fromPackage: string): string[] {
-  const PackageGraph = require('@lerna/package-graph');
+  const { PackageGraph } = require('@lerna/package-graph');
 
   const graph = new PackageGraph(packages);
 

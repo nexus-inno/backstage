@@ -17,14 +17,14 @@
 import { ApiEntity } from '@backstage/catalog-model';
 import {
   createApiFactory,
+  createComponentExtension,
   createPlugin,
   createRoutableExtension,
-  createComponentExtension,
 } from '@backstage/core';
-import { ApiExplorerPage as Page } from './components/ApiExplorerPage/ApiExplorerPage';
 import { defaultDefinitionWidgets } from './components/ApiDefinitionCard';
-import { rootRoute } from './routes';
+import { ApiExplorerPage as Page } from './components/ApiExplorerPage/ApiExplorerPage';
 import { apiDocsConfigRef } from './config';
+import { createComponentRouteRef, rootRoute } from './routes';
 
 export const apiDocsPlugin = createPlugin({
   id: 'api-docs',
@@ -45,6 +45,9 @@ export const apiDocsPlugin = createPlugin({
       },
     }),
   ],
+  externalRoutes: {
+    createComponent: createComponentRouteRef,
+  },
   register({ router }) {
     router.addRoute(rootRoute, Page);
   },
@@ -103,6 +106,14 @@ export const EntityProvidingComponentsCard = apiDocsPlugin.provide(
         import('./components/ComponentsCards').then(
           m => m.ProvidingComponentsCard,
         ),
+    },
+  }),
+);
+
+export const EntityHasApisCard = apiDocsPlugin.provide(
+  createComponentExtension({
+    component: {
+      lazy: () => import('./components/ApisCards').then(m => m.HasApisCard),
     },
   }),
 );

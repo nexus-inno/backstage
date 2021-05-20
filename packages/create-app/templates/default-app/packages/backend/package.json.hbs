@@ -8,8 +8,8 @@
     "node": "12 || 14"
   },
   "scripts": {
-    "build": "backstage-cli backend:build",
-    "build-image": "backstage-cli backend:build-image --build --tag backstage",
+    "build": "backstage-cli backend:bundle",
+    "build-image": "docker build ../.. -f Dockerfile --tag backstage",
     "start": "backstage-cli backend:dev",
     "lint": "backstage-cli lint",
     "test": "backstage-cli test",
@@ -20,6 +20,7 @@
     "app": "0.0.0",
     "@backstage/backend-common": "^{{version '@backstage/backend-common'}}",
     "@backstage/catalog-model": "^{{version '@backstage/catalog-model'}}",
+    "@backstage/catalog-client": "^{{version '@backstage/catalog-client'}}",
     "@backstage/config": "^{{version '@backstage/config'}}",
     "@backstage/plugin-app-backend": "^{{version '@backstage/plugin-app-backend'}}",
     "@backstage/plugin-auth-backend": "^{{version '@backstage/plugin-auth-backend'}}",
@@ -28,10 +29,10 @@
     "@backstage/plugin-scaffolder-backend": "^{{version '@backstage/plugin-scaffolder-backend'}}",
     "@backstage/plugin-techdocs-backend": "^{{version '@backstage/plugin-techdocs-backend'}}",
     "@gitbeaker/node": "^28.0.2",
-    "@octokit/rest": "^18.0.12",
+    "@octokit/rest": "^18.5.3",
     "dockerode": "^3.2.1",
     "express": "^4.17.1",
-    "express-promise-router": "^3.0.3",
+    "express-promise-router": "^4.1.0",
     "knex": "^0.21.6",
     {{#if dbTypePG}}
     "pg": "^8.3.0",

@@ -1,5 +1,89 @@
 # @backstage/plugin-tech-radar
 
+## 0.3.11
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+
+## 0.3.10
+
+### Patch Changes
+
+- b2e2ec753: Update README for composability
+- Updated dependencies [f65adcde7]
+- Updated dependencies [80888659b]
+- Updated dependencies [7b8272fb7]
+  - @backstage/core@0.7.8
+  - @backstage/theme@0.2.7
+
+## 0.3.9
+
+### Patch Changes
+
+- 184b02bef: Add markdown support for tech radar entry description
+- Updated dependencies [d0d1c2f7b]
+- Updated dependencies [5cafcf452]
+- Updated dependencies [86a95ba67]
+- Updated dependencies [e27cb6c45]
+  - @backstage/core@0.7.5
+
+## 0.3.8
+
+### Patch Changes
+
+- 34e6bb409: Map description in API RadarEntry to Entry
+
+  The description in the Entry was mapped to the latest timeline entry, which is a changelog. This
+  change maps the description in the API to the entry. To maintain backwards compatibility it
+  will set the description to the last timeline entry if no description exists at the entry level.
+
+- b56815b40: Fixes issue where radar description dialog is not shown when the entry has an url external to the radar page
+- Updated dependencies [8686eb38c]
+- Updated dependencies [9ca0e4009]
+- Updated dependencies [34ff49b0f]
+  - @backstage/core@0.7.2
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [4c049a1a1]
+  - @backstage/core@0.7.0
+
+## 0.3.6
+
+### Patch Changes
+
+- 9f2b3a26e: Added a dialog box that will show up when a you click on link on the radar and display the description if provided.
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core@0.6.3
+
+## 0.3.5
+
+### Patch Changes
+
+- 804502a5c: Migrated to new composability API, exporting the plugin instance as `techRadarPlugin` and the page as `TechRadarPage`.
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.3.4
 
 ### Patch Changes

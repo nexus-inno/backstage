@@ -39,10 +39,10 @@ type Props = {
 
 export const AboutContent = ({ entity }: Props) => {
   const classes = useStyles();
-  const isSystem = entity.kind.toLowerCase() === 'system';
-  const isDomain = entity.kind.toLowerCase() === 'domain';
-  const isResource = entity.kind.toLowerCase() === 'resource';
-  const isComponent = entity.kind.toLowerCase() === 'component';
+  const isSystem = entity.kind.toLocaleLowerCase('en-US') === 'system';
+  const isDomain = entity.kind.toLocaleLowerCase('en-US') === 'domain';
+  const isResource = entity.kind.toLocaleLowerCase('en-US') === 'resource';
+  const isComponent = entity.kind.toLocaleLowerCase('en-US') === 'component';
   const partOfSystemRelations = getEntityRelations(entity, RELATION_PART_OF, {
     kind: 'system',
   });
@@ -66,7 +66,7 @@ export const AboutContent = ({ entity }: Props) => {
         </Typography>
       </AboutField>
       <AboutField label="Owner" gridSizes={{ xs: 12, sm: 6, lg: 4 }}>
-        <EntityRefLinks entityRefs={ownedByRelations} />
+        <EntityRefLinks entityRefs={ownedByRelations} defaultKind="group" />
       </AboutField>
       {isSystem && (
         <AboutField

@@ -14,27 +14,35 @@
  * limitations under the License.
  */
 
-import { Logger } from 'winston';
+import { ContainerRunner } from '@backstage/backend-common';
 import { Entity } from '@backstage/catalog-model';
 import { Config } from '@backstage/config';
-import { TechdocsGenerator } from '.';
+import { Logger } from 'winston';
+import { getGeneratorKey } from './helpers';
+import { TechdocsGenerator } from './techdocs';
 import {
   GeneratorBase,
-  SupportedGeneratorKey,
   GeneratorBuilder,
+  SupportedGeneratorKey,
 } from './types';
-import { getGeneratorKey } from './helpers';
 
 export class Generators implements GeneratorBuilder {
   private generatorMap = new Map<SupportedGeneratorKey, GeneratorBase>();
 
   static async fromConfig(
     config: Config,
-    { logger }: { logger: Logger },
+    {
+      logger,
+      containerRunner,
+    }: { logger: Logger; containerRunner: ContainerRunner },
   ): Promise<GeneratorBuilder> {
     const generators = new Generators();
 
-    const techdocsGenerator = new TechdocsGenerator(logger, config);
+    const techdocsGenerator = new TechdocsGenerator({
+      logger,
+      containerRunner,
+      config,
+    });
     generators.register('techdocs', techdocsGenerator);
 
     return generators;

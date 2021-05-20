@@ -32,11 +32,17 @@ export class BitbucketPublisher implements PublisherBase {
     config: BitbucketIntegrationConfig,
     { repoVisibility }: { repoVisibility: RepoVisibilityOptions },
   ) {
+    if (config.host !== 'bitbucket.org' && !config.username)
+      throw new Error(
+        'Bitbucket server requires the username to be set in your config',
+      );
+
     return new BitbucketPublisher({
       host: config.host,
       token: config.token,
       appPassword: config.appPassword,
       username: config.username,
+      apiBaseUrl: config.apiBaseUrl,
       repoVisibility,
     });
   }
@@ -47,6 +53,7 @@ export class BitbucketPublisher implements PublisherBase {
       token?: string;
       appPassword?: string;
       username?: string;
+      apiBaseUrl?: string;
       repoVisibility: RepoVisibilityOptions;
     },
   ) {}
@@ -98,10 +105,6 @@ export class BitbucketPublisher implements PublisherBase {
     const { project, name, description } = opts;
 
     let response: Response;
-    const buffer = Buffer.from(
-      `${this.config.username}:${this.config.appPassword}`,
-      'utf8',
-    );
 
     const options: RequestInit = {
       method: 'POST',
@@ -111,7 +114,7 @@ export class BitbucketPublisher implements PublisherBase {
         is_private: this.config.repoVisibility === 'private',
       }),
       headers: {
-        Authorization: `Basic ${buffer.toString('base64')}`,
+        Authorization: this.getAuthorizationHeader(),
         'Content-Type': 'application/json',
       },
     };
@@ -132,11 +135,30 @@ export class BitbucketPublisher implements PublisherBase {
         }
       }
 
-      // TODO use the urlReader to get the defautl branch
+      // TODO use the urlReader to get the default branch
       const catalogInfoUrl = `${r.links.html.href}/src/master/catalog-info.yaml`;
       return { remoteUrl, catalogInfoUrl };
     }
     throw new Error(`Not a valid response code ${await response.text()}`);
+  }
+
+  private getAuthorizationHeader(): string {
+    if (this.config.username && this.config.appPassword) {
+      const buffer = Buffer.from(
+        `${this.config.username}:${this.config.appPassword}`,
+        'utf8',
+      );
+
+      return `Basic ${buffer.toString('base64')}`;
+    }
+
+    if (this.config.token) {
+      return `Bearer ${this.config.token}`;
+    }
+
+    throw new Error(
+      `Authorization has not been provided for Bitbucket. Please add either username + appPassword or token to the Integrations config`,
+    );
   }
 
   private async createBitbucketServerRepository(opts: {
@@ -155,15 +177,17 @@ export class BitbucketPublisher implements PublisherBase {
         is_private: this.config.repoVisibility === 'private',
       }),
       headers: {
-        Authorization: `Bearer ${this.config.token}`,
+        Authorization: this.getAuthorizationHeader(),
         'Content-Type': 'application/json',
       },
     };
+
     try {
-      response = await fetch(
-        `https://${this.config.host}/rest/api/1.0/projects/${project}/repos`,
-        options,
-      );
+      const baseUrl = this.config.apiBaseUrl
+        ? this.config.apiBaseUrl
+        : `https://${this.config.host}/rest/api/1.0`;
+
+      response = await fetch(`${baseUrl}/projects/${project}/repos`, options);
     } catch (e) {
       throw new Error(`Unable to create repository, ${e}`);
     }

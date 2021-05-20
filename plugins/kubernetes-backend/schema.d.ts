@@ -13,15 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export interface Config {
   kubernetes?: {
-    serviceLocatorMethod: 'multiTenant';
-    clusterLocatorMethods: 'config'[];
-    clusters: {
-      url: string;
-      name: string;
-      serviceAccountToken: string | undefined;
-      authProvider: 'aws' | 'google' | 'serviceAccount';
-    }[];
+    serviceLocatorMethod: {
+      type: 'multiTenant';
+    };
+    clusterLocatorMethods: Array<
+      | {
+          /** @visibility frontend */
+          type: 'gke';
+          /** @visibility frontend */
+          projectId: string;
+          /** @visibility frontend */
+          region?: string;
+          /** @visibility frontend */
+          skipTLSVerify?: boolean;
+        }
+      | {
+          /** @visibility frontend */
+          type: 'config';
+          clusters: Array<{
+            /** @visibility frontend */
+            url: string;
+            /** @visibility frontend */
+            name: string;
+            /** @visibility secret  */
+            serviceAccountToken?: string;
+            /** @visibility frontend */
+            authProvider: 'aws' | 'google' | 'serviceAccount';
+            /** @visibility frontend */
+            skipTLSVerify?: boolean;
+          }>;
+        }
+    >;
+    customResources?: Array<{
+      group: string;
+      apiVersion: string;
+      plural: string;
+    }>;
   };
 }

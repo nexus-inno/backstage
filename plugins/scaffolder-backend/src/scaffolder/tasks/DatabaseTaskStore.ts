@@ -15,23 +15,22 @@
  */
 
 import { JsonObject } from '@backstage/config';
-import {
-  ConflictError,
-  NotFoundError,
-  resolvePackagePath,
-} from '@backstage/backend-common';
-import Knex from 'knex';
+import { resolvePackagePath } from '@backstage/backend-common';
+import { ConflictError, NotFoundError } from '@backstage/errors';
+import { Knex } from 'knex';
 import { v4 as uuid } from 'uuid';
 import {
   DbTaskEventRow,
   DbTaskRow,
   Status,
   TaskEventType,
+  TaskSecrets,
   TaskSpec,
   TaskStore,
   TaskStoreEmitOptions,
   TaskStoreGetEventsOptions,
 } from './types';
+import { DateTime } from 'luxon';
 
 const migrationsDir = resolvePackagePath(
   '@backstage/plugin-scaffolder-backend',
@@ -44,6 +43,7 @@ export type RawDbTaskRow = {
   status: Status;
   last_heartbeat_at?: string;
   created_at: string;
+  secrets?: string;
 };
 
 export type RawDbTaskEventRow = {
@@ -64,7 +64,7 @@ export class DatabaseTaskStore implements TaskStore {
 
   constructor(private readonly db: Knex) {}
 
-  async get(taskId: string): Promise<DbTaskRow> {
+  async getTask(taskId: string): Promise<DbTaskRow> {
     const [result] = await this.db<RawDbTaskRow>('tasks')
       .where({ id: taskId })
       .select();
@@ -73,23 +73,29 @@ export class DatabaseTaskStore implements TaskStore {
     }
     try {
       const spec = JSON.parse(result.spec);
+      const secrets = result.secrets ? JSON.parse(result.secrets) : undefined;
       return {
         id: result.id,
         spec,
         status: result.status,
         lastHeartbeatAt: result.last_heartbeat_at,
         createdAt: result.created_at,
+        secrets,
       };
     } catch (error) {
       throw new Error(`Failed to parse spec of task '${taskId}', ${error}`);
     }
   }
 
-  async createTask(spec: TaskSpec): Promise<{ taskId: string }> {
+  async createTask(
+    spec: TaskSpec,
+    secrets?: TaskSecrets,
+  ): Promise<{ taskId: string }> {
     const taskId = uuid();
     await this.db<RawDbTaskRow>('tasks').insert({
       id: taskId,
       spec: JSON.stringify(spec),
+      secrets: secrets ? JSON.stringify(secrets) : undefined,
       status: 'open',
     });
     return { taskId };
@@ -121,12 +127,14 @@ export class DatabaseTaskStore implements TaskStore {
 
       try {
         const spec = JSON.parse(task.spec);
+        const secrets = task.secrets ? JSON.parse(task.secrets) : undefined;
         return {
           id: task.id,
           spec,
           status: 'processing',
           lastHeartbeatAt: task.last_heartbeat_at,
           createdAt: task.created_at,
+          secrets,
         };
       } catch (error) {
         throw new Error(`Failed to parse spec of task '${task.id}', ${error}`);
@@ -211,6 +219,7 @@ export class DatabaseTaskStore implements TaskStore {
         })
         .update({
           status,
+          secrets: null as any,
         });
       if (updateCount !== 1) {
         throw new ConflictError(
@@ -255,11 +264,14 @@ export class DatabaseTaskStore implements TaskStore {
       try {
         const body = JSON.parse(event.body) as JsonObject;
         return {
-          id: event.id,
+          id: Number(event.id),
           taskId,
           body,
           type: event.event_type,
-          createdAt: event.created_at,
+          createdAt:
+            typeof event.created_at === 'string'
+              ? DateTime.fromSQL(event.created_at, { zone: 'UTC' }).toISO()
+              : event.created_at,
         };
       } catch (error) {
         throw new Error(

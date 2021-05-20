@@ -1,5 +1,138 @@
 # @backstage/plugin-org
 
+## 0.3.13
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- f59a945b7: Paginate group members to only display 50 members maximum.
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [10c008a3a]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [16be1d093]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+  - @backstage/core-api@0.2.18
+  - @backstage/plugin-catalog-react@0.1.6
+  - @backstage/catalog-model@0.7.9
+
+## 0.3.12
+
+### Patch Changes
+
+- 97d53f686: Optimize data fetched for the `OwnershipCard`.
+- Updated dependencies [1279a3325]
+- Updated dependencies [4a4681b1b]
+- Updated dependencies [97b60de98]
+- Updated dependencies [b051e770c]
+- Updated dependencies [98dd5da71]
+  - @backstage/core@0.7.4
+  - @backstage/core-api@0.2.16
+  - @backstage/catalog-model@0.7.6
+
+## 0.3.11
+
+### Patch Changes
+
+- 7c6e1463b: Correctly route to namespaced group members
+- 87171d57d: Correctly include group members via matching namespace relation
+- baa39809e: Fixed MembersList showing members from a previous group when navigating to a new group
+- 9f48b548c: Some cleanup in how types and components are used; leverage `EntityRefLinks`
+- Updated dependencies [9f48b548c]
+- Updated dependencies [8488a1a96]
+  - @backstage/plugin-catalog-react@0.1.4
+  - @backstage/catalog-model@0.7.5
+
+## 0.3.10
+
+### Patch Changes
+
+- 9ca0e4009: use local version of lowerCase and upperCase methods
+- Updated dependencies [a51dc0006]
+- Updated dependencies [e7f9b9435]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [9ca0e4009]
+- Updated dependencies [34ff49b0f]
+- Updated dependencies [d88dd219e]
+- Updated dependencies [c8b54c370]
+  - @backstage/core-api@0.2.14
+  - @backstage/core@0.7.2
+  - @backstage/plugin-catalog-react@0.1.2
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [12d8f27a6]
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [9d455f69a]
+- Updated dependencies [4c049a1a1]
+- Updated dependencies [02816ecd7]
+  - @backstage/catalog-model@0.7.3
+  - @backstage/core-api@0.2.12
+  - @backstage/core@0.7.0
+  - @backstage/plugin-catalog-react@0.1.1
+
+## 0.3.8
+
+### Patch Changes
+
+- e3bc5aad7: Use the `pageTheme` to colour the OwnershipCard boxes with their respective theme colours.
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [d0760ecdf]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [88f1f1b60]
+- Updated dependencies [bad21a085]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [5c2e2863f]
+- Updated dependencies [b6c4f485d]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core-api@0.2.11
+  - @backstage/core@0.6.3
+  - @backstage/plugin-catalog-react@0.1.0
+  - @backstage/catalog-model@0.7.2
+
+## 0.3.7
+
+### Patch Changes
+
+- f4c2bcf54: Use a more strict type for `variant` of cards.
+- e8692df4a: - Fixes padding in `MembersListCard`
+  - Fixes email icon size in `GroupProfileCard`
+  - Uniform sizing across `GroupProfileCard` and `UserProfileCard`
+- Updated dependencies [f10950bd2]
+- Updated dependencies [fd3f2a8c0]
+- Updated dependencies [d34d26125]
+- Updated dependencies [0af242b6d]
+- Updated dependencies [f4c2bcf54]
+- Updated dependencies [10a0124e0]
+- Updated dependencies [07e226872]
+- Updated dependencies [f62e7abe5]
+- Updated dependencies [96f378d10]
+- Updated dependencies [688b73110]
+  - @backstage/core-api@0.2.10
+  - @backstage/core@0.6.2
+  - @backstage/plugin-catalog-react@0.0.4
+
+## 0.3.6
+
+### Patch Changes
+
+- 14aef4b94: Visual updates to User and Group pages
+- Updated dependencies [19d354c78]
+- Updated dependencies [b51ee6ece]
+  - @backstage/plugin-catalog-react@0.0.3
+  - @backstage/core@0.6.1
+
 ## 0.3.5
 
 ### Patch Changes

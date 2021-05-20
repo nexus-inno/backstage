@@ -28,6 +28,7 @@ import {
   PublisherBase,
   PublishRequest,
   PublishResponse,
+  ReadinessResponse,
   TechDocsMetadata,
 } from './types';
 
@@ -65,6 +66,12 @@ export class LocalPublish implements PublisherBase {
     this.discovery = discovery;
   }
 
+  async getReadiness(): Promise<ReadinessResponse> {
+    return {
+      isAvailable: true,
+    };
+  }
+
   publish({ entity, directory }: PublishRequest): Promise<PublishResponse> {
     const entityNamespace = entity.metadata.namespace ?? 'default';
 
@@ -88,7 +95,7 @@ export class LocalPublish implements PublisherBase {
           );
           reject(err);
         }
-
+        this.logger.info(`Published site stored at ${publishDir}`);
         this.discovery
           .getBaseUrl('techdocs')
           .then(techdocsApiUrl => {
@@ -141,7 +148,7 @@ export class LocalPublish implements PublisherBase {
 
     // Check if the file exists
     try {
-      fs.access(indexHtmlPath, fs.constants.F_OK);
+      await fs.access(indexHtmlPath, fs.constants.F_OK);
       return true;
     } catch (err) {
       return false;

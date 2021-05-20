@@ -1,5 +1,219 @@
 # @backstage/core
 
+## 0.7.10
+
+### Patch Changes
+
+- 65e6c4541: Remove circular dependencies
+- 5da6a561d: Fix a bug where users are asked to log-in on every page refresh. This is specific to people with only one sign-in provider in their SignInPage component.
+- Updated dependencies [61c3f927c]
+- Updated dependencies [65e6c4541]
+  - @backstage/core-api@0.2.19
+
+## 0.7.9
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 889d89b6e: Fix state persisted in the URL make search input in the table toolbar lose their
+  focus.
+- 3f988cb63: Add count of older messages when multiple messages exist in AlertDisplay
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [675a569a9]
+  - @backstage/core-api@0.2.18
+
+## 0.7.8
+
+### Patch Changes
+
+- f65adcde7: Fix some transitive dependency warnings in yarn
+- 80888659b: Bump react-hook-form version to be the same for the entire project.
+- Updated dependencies [7b8272fb7]
+- Updated dependencies [d8b81fd28]
+  - @backstage/theme@0.2.7
+  - @backstage/config@0.1.5
+
+## 0.7.7
+
+### Patch Changes
+
+- 9afcac5af: Allow passing NavLinkProps to SidebarItem component to use in NavLink
+- e0c9ed759: Add `if` prop to `EntityLayout.Route` to conditionally render tabs
+- 6eaecbd81: Improve owner example value in `MissingAnnotationEmptyState`.
+
+## 0.7.6
+
+### Patch Changes
+
+- 94da20976: Sort the table filter options by name.
+- d8cc7e67a: Exposing Material UI extension point for tabs to be able to add additional information to them
+- 99fbef232: Adding Headings for Accessibility on the Scaffolder Plugin
+- ab07d77f6: Add support for discovering plugins through the app element tree, removing the need to register them explicitly.
+- 937ed39ce: Exported SignInProviderConfig to strongly type SignInPage providers
+- 9a9e7a42f: Adding close button on support menu
+- 50ce875a0: Fixed a potentially confusing error being thrown about misuse of routable extensions where the error was actually something different.
+- Updated dependencies [ab07d77f6]
+- Updated dependencies [931b21a12]
+- Updated dependencies [50ce875a0]
+  - @backstage/core-api@0.2.17
+  - @backstage/theme@0.2.6
+
+## 0.7.5
+
+### Patch Changes
+
+- d0d1c2f7b: Pass `inverse` prop to Gauge from GaugeCard
+- 5cafcf452: add debounce time attribute for apis-docs for search, giving more time to the users when they are typing.
+- 86a95ba67: exposes undocumented `PageTheme`
+- e27cb6c45: Don't use a drag & drop cursor when clicking on disabled `IconLinkVertical`.
+
+## 0.7.4
+
+### Patch Changes
+
+- 1279a3325: Introduce a `load-chunk` step in the `BootErrorPage` to show make chunk loading
+  errors visible to the user.
+- 4a4681b1b: Improved error messaging for routable extension errors, making it easier to identify the component and mount point that caused the error.
+- b051e770c: Fixed a bug with `useRouteRef` where navigating from routes beneath a mount point would often fail.
+- 98dd5da71: Add support for multiple links to post-scaffold task summary page
+- Updated dependencies [1279a3325]
+- Updated dependencies [4a4681b1b]
+- Updated dependencies [b051e770c]
+  - @backstage/core-api@0.2.16
+
+## 0.7.3
+
+### Patch Changes
+
+- fcc3ada24: Reuse ResponseErrorList for non ResponseErrors
+- 4618774ff: Changed color for Add Item, Support & Choose buttons with low contrast/readability in dark mode
+- df59930b3: Fix PropTypes error with OverflowTooltip component
+- Updated dependencies [76deafd31]
+- Updated dependencies [01ccef4c7]
+- Updated dependencies [4618774ff]
+  - @backstage/core-api@0.2.15
+  - @backstage/theme@0.2.5
+
+## 0.7.2
+
+### Patch Changes
+
+- 8686eb38c: Add a `ResponseErrorPanel` to render `ResponseError` from `@backstage/errors`
+- 9ca0e4009: use local version of lowerCase and upperCase methods
+- 34ff49b0f: Allow extension components to also return `null` in addition to a `JSX.Element`.
+- Updated dependencies [a51dc0006]
+- Updated dependencies [e7f9b9435]
+- Updated dependencies [0434853a5]
+- Updated dependencies [34ff49b0f]
+- Updated dependencies [d88dd219e]
+- Updated dependencies [c8b54c370]
+  - @backstage/core-api@0.2.14
+  - @backstage/config@0.1.4
+
+## 0.7.1
+
+### Patch Changes
+
+- ff4d666ab: Add support for passing a fetch function instead of data to Table `data` prop.
+- 2089de76b: Deprecated `ItemCard`. Added `ItemCardGrid` and `ItemCardHeader` instead, that can be used to compose functionality around regular Material-UI `Card` components instead.
+- dc1fc92c8: Add support for non external URI's in the Link component to `to` prop. For example `<Link to="slack://channel?team=T0000&id=C0000">Slack</Link>
+- Updated dependencies [13524b80b]
+- Updated dependencies [e74b07578]
+- Updated dependencies [6fb4258a8]
+- Updated dependencies [2089de76b]
+- Updated dependencies [395885905]
+  - @backstage/core-api@0.2.13
+  - @backstage/theme@0.2.4
+
+## 0.7.0
+
+### Minor Changes
+
+- 4c049a1a1: - Adds onClick and other props to IconLinkVertical;
+
+  - Allows TriggerButton component to render when pager duty key is missing;
+  - Refactors TriggerButton and PagerDutyCard not to have shared state;
+  - Removes the `action` prop of the IconLinkVertical component while adding `onClick`.
+
+    Instead of having an action including a button with onClick, now the whole component can be clickable making it easier to implement and having a better UX.
+
+    Before:
+
+    ```ts
+    const myLink: IconLinkVerticalProps = {
+      label: 'Click me',
+      action: <Button onClick={myAction} />,
+      icon: <MyIcon onClick={myAction} />,
+    };
+    ```
+
+    After:
+
+    ```ts
+    const myLink: IconLinkVerticalProps = {
+      label: 'Click me',
+      onClick: myAction,
+      icon: <MyIcon />,
+    };
+    ```
+
+### Patch Changes
+
+- 40c0fdbaa: Added support for optional external route references. By setting `optional: true` when creating an `ExternalRouteRef` it is no longer a requirement to bind the route in the app. If the app isn't bound `useRouteRef` will return `undefined`.
+- 2a271d89e: Internal refactor of how component data is access to avoid polluting components and make it possible to bridge across versions.
+- bece09057: Improve rendering of multiple support item links in the `SupportButton`
+- 169f48deb: Added the color prop to TrendLine from the Sparklines props types to be able to have custom colors.
+- 8a1566719: Added a new useSupportConfig hook that reads a new `app.support` config key. Also updated the SupportButton and ErrorPage components to use the new config.
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+  - @backstage/core-api@0.2.12
+
+## 0.6.3
+
+### Patch Changes
+
+- 3a58084b6: The `FlatRoutes` components now renders the not found page of the app if no routes are matched.
+- e799e74d4: Fix `OverflowTooltip` cutting off the bottom of letters like "g" and "y".
+- 1407b34c6: More informative error message for missing ApiContext.
+- 9615e68fb: Forward link styling of `EntityRefLink` and `EnriryRefLinks` into the underling
+  `Link`.
+- 49f9b7346: Deprecate `type` of `ItemCard` and introduce new `subtitle` which allows passing
+  react nodes.
+- 3a58084b6: Created separate `AppContext` type to be returned from `useApp` rather than the `BackstageApp` itself. The `AppContext` type includes but deprecates `getPlugins`, `getProvider`, `getRouter`, and `getRoutes`. In addition, the `AppContext` adds a new `getComponents` method which providers access to the app components.
+- 2c1f2a7c2: Introduced generic OverflowTooltip component for cases where longer text needs to be truncated with ellipsis and show hover tooltip with full text. This is particularly useful in the cases where longer description text is rendered in table. e.g. CatalogTable and ApiExplorerTable.
+- Updated dependencies [3a58084b6]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [b6c4f485d]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [a1f5e6545]
+  - @backstage/core-api@0.2.11
+  - @backstage/config@0.1.3
+
+## 0.6.2
+
+### Patch Changes
+
+- fd3f2a8c0: Export `createExternalRouteRef`, as well as give it an `id` for easier debugging, and fix parameter requirements when used with `useRouteRef`.
+- f4c2bcf54: Use a more strict type for `variant` of cards.
+- 07e226872: Export Select component
+- f62e7abe5: Make sure that SidebarItems are also active when on sub route.
+- 96f378d10: Add support for custom empty state of `Table` components.
+
+  You can now optionally pass `emptyContent` to `Table` that is displayed
+  if the table has now rows.
+
+- 688b73110: Add Breadcrumbs component
+- Updated dependencies [f10950bd2]
+- Updated dependencies [fd3f2a8c0]
+  - @backstage/core-api@0.2.10
+
+## 0.6.1
+
+### Patch Changes
+
+- b51ee6ece: Fixed type inference of `createRouteRef`.
+
 ## 0.6.0
 
 ### Minor Changes

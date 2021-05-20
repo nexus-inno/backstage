@@ -14,26 +14,54 @@
  * limitations under the License.
  */
 
-import React, { createContext, PropsWithChildren, useContext } from 'react';
-import { BackstageApp } from './types';
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  Context,
+  useMemo,
+} from 'react';
+import {
+  VersionedValue,
+  createVersionedValueMap,
+} from '../lib/versionedValues';
+import {
+  getGlobalSingleton,
+  getOrCreateGlobalSingleton,
+} from '../lib/globalObject';
+import { AppContext as AppContextV1 } from './types';
 
-const Context = createContext<BackstageApp | undefined>(undefined);
+type AppContextType = VersionedValue<{ 1: AppContextV1 }> | undefined;
+const AppContext = getOrCreateGlobalSingleton('app-context', () =>
+  createContext<AppContextType | undefined>(undefined),
+);
 
 type Props = {
-  app: BackstageApp;
+  appContext: AppContextV1;
 };
 
 export const AppContextProvider = ({
-  app,
+  appContext,
   children,
-}: PropsWithChildren<Props>) => (
-  <Context.Provider value={app} children={children} />
-);
+}: PropsWithChildren<Props>) => {
+  const versionedValue = useMemo(
+    () => createVersionedValueMap({ 1: appContext }),
+    [appContext],
+  );
 
-export const useApp = (): BackstageApp => {
-  const app = useContext(Context);
-  if (!app) {
+  return <AppContext.Provider value={versionedValue} children={children} />;
+};
+
+export const useApp = (): AppContextV1 => {
+  const versionedContext = useContext(
+    getGlobalSingleton<Context<AppContextType>>('app-context'),
+  );
+  if (!versionedContext) {
     throw new Error('No app context available');
   }
-  return app;
+  const appContext = versionedContext.atVersion(1);
+  if (!appContext) {
+    throw new Error('AppContext v1 not available');
+  }
+  return appContext;
 };

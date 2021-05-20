@@ -17,10 +17,13 @@
 import * as results from './results';
 
 export { AnnotateLocationEntityProcessor } from './AnnotateLocationEntityProcessor';
+export { AnnotateScmSlugEntityProcessor } from './AnnotateScmSlugEntityProcessor';
 export { AwsOrganizationCloudAccountProcessor } from './AwsOrganizationCloudAccountProcessor';
+export { BitbucketDiscoveryProcessor } from './BitbucketDiscoveryProcessor';
 export { BuiltinKindsEntityProcessor } from './BuiltinKindsEntityProcessor';
 export { CodeOwnersProcessor } from './CodeOwnersProcessor';
 export { FileReaderProcessor } from './FileReaderProcessor';
+export { GithubDiscoveryProcessor } from './GithubDiscoveryProcessor';
 export { GithubOrgReaderProcessor } from './GithubOrgReaderProcessor';
 export { LdapOrgReaderProcessor } from './LdapOrgReaderProcessor';
 export { LocationEntityProcessor } from './LocationEntityProcessor';
@@ -32,3 +35,5 @@ export * from './types';
 export { UrlReaderProcessor } from './UrlReaderProcessor';
 export { parseEntityYaml } from './util/parse';
 export { results };
+
+export type { BitbucketRepositoryParser } from './bitbucket';

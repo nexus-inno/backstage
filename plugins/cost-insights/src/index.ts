@@ -14,11 +14,36 @@
  * limitations under the License.
  */
 
-export { plugin } from './plugin';
-export * from './client';
+export {
+  costInsightsPlugin,
+  costInsightsPlugin as plugin,
+  CostInsightsPage,
+  CostInsightsProjectGrowthInstructionsPage,
+  CostInsightsLabelDataflowInstructionsPage,
+} from './plugin';
+export { ExampleCostInsightsClient } from './example';
+export {
+  BarChart,
+  BarChartLegend,
+  BarChartTooltip,
+  BarChartTooltipItem,
+  CostGrowth,
+  CostGrowthIndicator,
+  LegendItem,
+} from './components';
+export { MockConfigProvider, MockCurrencyProvider } from './testUtils';
 export * from './api';
-export { ProjectGrowthAlert, UnlabeledDataflowAlert } from './alerts';
-export * from './components';
-export { useCurrency } from './hooks';
+export * from './alerts';
 export * from './types';
-export * from './utils/tests';
+
+export type {
+  BarChartProps,
+  BarChartLegendOptions,
+  BarChartLegendProps,
+  BarChartTooltipProps,
+  BarChartTooltipItemProps,
+  CostGrowthProps,
+  CostGrowthIndicatorProps,
+  TooltipItem,
+  LegendItemProps,
+} from './components';

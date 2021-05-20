@@ -23,6 +23,7 @@ we recommend that you name them `catalog-info.yaml`.
 - [Common to All Kinds: The Envelope](#common-to-all-kinds-the-envelope)
 - [Common to All Kinds: The Metadata](#common-to-all-kinds-the-metadata)
 - [Common to All Kinds: Relations](#common-to-all-kinds-relations)
+- [Common to All Kinds: Status](#common-to-all-kinds-status)
 - [Kind: Component](#kind-component)
 - [Kind: Template](#kind-template)
 - [Kind: API](#kind-api)
@@ -35,8 +36,33 @@ we recommend that you name them `catalog-info.yaml`.
 
 ## Overall Shape Of An Entity
 
-The following is an example of the shape of an entity as returned from the
-software catalog API.
+The following is an example of a descriptor file for a Component entity:
+
+```yaml
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: artist-web
+  description: The place to be, for great artists
+  labels:
+    example.com/custom: custom_label_value
+  annotations:
+    example.com/service-discovery: artistweb
+    circleci.com/project-slug: github/example-org/artist-website
+  tags:
+    - java
+  links:
+    - url: https://admin.example-org.com
+      title: Admin Dashboard
+      icon: dashboard
+spec:
+  type: website
+  lifecycle: production
+  owner: artist-relations-team
+  system: public-websites
+```
+
+This is the same entity as returned in JSON from the software catalog API:
 
 ```js
 {
@@ -52,7 +78,7 @@ software catalog API.
     "etag": "ZjU2MWRkZWUtMmMxZS00YTZiLWFmMWMtOTE1NGNiZDdlYzNk",
     "generation": 1,
     "labels": {
-      "system": "public-websites"
+      "example.com/custom": "custom_label_value"
     },
     "links": [{
       "url": "https://admin.example-org.com",
@@ -66,34 +92,10 @@ software catalog API.
   "spec": {
     "lifecycle": "production",
     "owner": "artist-relations-team",
-    "type": "website"
+    "type": "website",
+    "system": "public-websites"
   }
 }
-```
-
-The corresponding descriptor file that generated it may look as follows:
-
-```yaml
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: artist-web
-  description: The place to be, for great artists
-  labels:
-    system: public-websites
-  annotations:
-    example.com/service-discovery: artistweb
-    circleci.com/project-slug: github/example-org/artist-website
-  tags:
-    - java
-  links:
-    - url: https://admin.example-org.com
-      title: Admin Dashboard
-      icon: dashboard
-spec:
-  type: website
-  lifecycle: production
-  owner: artist-relations-team
 ```
 
 The root fields `apiVersion`, `kind`, `metadata`, and `spec` are part of the
@@ -205,7 +207,8 @@ described below.
 
 In addition to these, you may add any number of other fields directly under
 `metadata`, but be aware that general plugins and tools may not be able to
-understand their semantics.
+understand their semantics. See [Extending the model](extending-the-model.md)
+for more information.
 
 ### `name` [required]
 
@@ -214,8 +217,8 @@ entity, and for machines and other components to reference the entity (e.g. in
 URLs or from other entity specification files).
 
 Names must be unique per kind, within a given namespace (if specified), at any
-point in time. Names may be reused at a later time, after an entity is deleted
-from the registry.
+point in time. This uniqueness constraint is case insensitive. Names may be
+reused at a later time, after an entity is deleted from the registry.
 
 Names are required to follow a certain format. Entities that do not follow those
 rules will not be accepted for registration in the catalog. The ruleset is
@@ -226,19 +229,7 @@ follows.
 - Must consist of sequences of `[a-z0-9A-Z]` possibly separated by one of
   `[-_.]`
 
-Example: `visits-tracking-service`, `CircleciBuildsDump_avro_gcs`
-
-In addition to this, names are passed through a normalization function and then
-compared to the same normalized form of other entity names and made sure to not
-collide. This rule of uniqueness exists to avoid situations where e.g. both
-`my-component` and `MyComponent` are registered side by side, which leads to
-confusion and risk. The normalization function is also configurable, but the
-default behavior is as follows.
-
-- Strip out all characters outside of the set `[a-zA-Z0-9]`
-- Convert to lowercase
-
-Example: `CircleciBuildsDs_avro_gcs` -> `circlecibuildsdsavrogcs`
+Example: `visits-tracking-service`, `CircleciBuildsDumpV2_avro_gcs`
 
 ### `namespace` [optional]
 
@@ -248,7 +239,8 @@ the same format restrictions as `name` above.
 This field is optional, and currently has no special semantics apart from
 bounding the name uniqueness constraint if specified. It is reserved for future
 use and may get broader semantic implication later. For now, it is recommended
-to not specify a namespace unless you have specific need to do so.
+to not specify a namespace unless you have specific need to do so. This means
+the entity belongs to the `"default"` namespace.
 
 Namespaces may also be part of the catalog, and are `v1` / `Namespace` entities,
 i.e. not Backstage specific but the same as in Kubernetes.
@@ -278,7 +270,6 @@ most 253 characters in total. The name part must be sequences of `[a-zA-Z0-9]`
 separated by any of `[-_.]`, at most 63 characters in total.
 
 The `backstage.io/` prefix is reserved for use by Backstage core components.
-Some keys such as `system` also have predefined semantics.
 
 Values are strings that follow the same restrictions as `name` above.
 
@@ -406,6 +397,54 @@ with it (such as the default kind being `Group` if not specified).
 See the [well-known relations section](well-known-relations.md) for a list of
 well-known / common relations and their semantics.
 
+## Common to All Kinds: Status
+
+The `status` root field is a read-only set of statuses, pertaining to the
+current state or health of the entity, described in the
+[well-known statuses section](well-known-statuses.md). Each status field
+contains a specific blob of data that describes some aspect of the state of the
+entity, as seen from the point of view of some specific system. Different
+systems may contribute to this status object, under their own respective keys.
+
+The current main use case for this field is for the ingestion processes of the
+catalog itself to convey information about failures and warnings back to the
+user.
+
+A status field as part of a single entity that's read out of the API may look as
+follows.
+
+```js
+{
+  // ...
+  "status": {
+    "backstage.io/catalog-processing": {
+      "errors": []
+    }
+  },
+  "spec": {
+    // ...
+  }
+}
+```
+
+The keys of the `status` object are arbitrary strings. We recommend that any
+statuses that are not strictly private within the organization be namespaced to
+avoid collisions. Statuses emitted by Backstage core processes will for example
+be prefixed with `backstage.io/` as in the example above.
+
+The values of the `status` object are currently left unrestricted, except that
+they must be objects. We reserve the right to extend this model in the future,
+such that some fields of those value objects gain standardized meaning. We may
+for example want to add a standard concept of "severity" or "level" to these.
+
+Entity descriptor YAML files are not supposed to contain this field. Instead,
+catalog processors analyze the entity descriptor data and its surroundings, and
+deduce status entries that are then attached onto the entity as read from the
+catalog.
+
+See the [well-known statuses section](well-known-statuses.md) for a list of
+well-known / common relations and their semantics.
+
 ## Kind: Component
 
 Describes the following entity kind:
@@ -531,51 +570,103 @@ consumed by the component, e.g. `artist-api`. This field is optional.
 | --------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | [`API`](#kind-api) (default)            | Same as this entity, typically `default`   | [`consumesApi`, and reverse `apiConsumedBy`](well-known-relations.md#consumesapi-and-apiconsumedby) |
 
+### `spec.dependsOn` [optional]
+
+An array of [entity references](#string-references) to the components and
+resources that the component depends on, e.g. `artists-db`. This field is
+optional.
+
+| [`kind`](#apiversion-and-kind-required) | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                                            |
+| --------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [`Component`](#kind-component)          | Same as this entity, typically `default`   | [`dependsOn`, and reverse `dependencyOf`](well-known-relations.md#dependson-and-dependencyof) |
+| [`Resource`](#kind-resource)            | Same as this entity, typically `default`   | [`dependsOn`, and reverse `dependencyOf`](well-known-relations.md#dependson-and-dependencyof) |
+
 ## Kind: Template
 
-Describes the following entity kind:
+The following describes the following entity kind:
 
-| Field        | Value                   |
-| ------------ | ----------------------- |
-| `apiVersion` | `backstage.io/v1alpha1` |
-| `kind`       | `Template`              |
+| Field        | Value                  |
+| ------------ | ---------------------- |
+| `apiVersion` | `backstage.io/v1beta2` |
+| `kind`       | `Template`             |
 
-A Template describes a skeleton for use with the Scaffolder. It is used for
-describing what templating library is supported, and also for documenting the
-variables that the template requires using
-[JSON Forms Schema](https://jsonforms.io/).
+If you're looking for docs on `v1alpha1` you can find them
+[here](../software-templates/legacy.md)
+
+A template definition describes both the parameters that are rendered in the
+frontend part of the scaffolding wizard, and the steps that are executed when
+scaffolding that component.
 
 Descriptor files for this kind may look as follows.
 
 ```yaml
-apiVersion: backstage.io/v1alpha1
+apiVersion: backstage.io/v1beta2
 kind: Template
+# some metadata about the template itself
 metadata:
-  name: react-ssr-template
-  title: React SSR Template
-  description:
-    Next.js application skeleton for creating isomorphic web applications.
-  tags:
-    - recommended
-    - react
+  name: v1beta2-demo
+  title: Test Action template
+  description: scaffolder v1beta2 template demo
 spec:
-  owner: web@example.com
-  templater: cookiecutter
-  type: website
-  path: '.'
-  schema:
-    required:
-      - component_id
-      - description
-    properties:
-      component_id:
-        title: Name
-        type: string
-        description: Unique name of the component
-      description:
-        title: Description
-        type: string
-        description: Description of the component
+  owner: backstage/techdocs-core
+  type: service
+
+  # these are the steps which are rendered in the frontend with the form input
+  parameters:
+    - title: Fill in some steps
+      required:
+        - name
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  # here's the steps that are executed in series in the scaffolder backend
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:cookiecutter
+      input:
+        url: ./template
+        values:
+          name: '{{ parameters.name }}'
+
+    - id: fetch-docs
+      name: Fetch Docs
+      action: fetch:plain
+      input:
+        targetPath: ./community
+        url: https://github.com/backstage/community/tree/main/backstage-community-sessions
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: 'This is {{ parameters.name }}'
+        repoUrl: '{{ parameters.repoUrl }}'
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: '{{ steps.publish.output.repoContentsUrl }}'
+        catalogInfoPath: '/catalog-info.yaml'
 ```
 
 In addition to the [common envelope metadata](#common-to-all-kinds-the-metadata)
@@ -583,7 +674,7 @@ shape, this kind has the following structure.
 
 ### `apiVersion` and `kind` [required]
 
-Exactly equal to `backstage.io/v1alpha1` and `Template`, respectively.
+Exactly equal to `backstage.io/v1beta2` and `Template`, respectively.
 
 ### `metadata.title` [required]
 
@@ -599,48 +690,40 @@ A list of strings that can be associated with the template, e.g.
 This list will also be used in the frontend to display to the user so you can
 potentially search and group templates by these tags.
 
-### `spec.type` [optional]
+### `spec.type` [required]
 
-The type of component as a string, e.g. `website`. This field is optional but
-recommended.
+The type of component created by the template, e.g. `website`. This is used for
+filtering templates, and should ideally match the Component
+[spec.type](#spectype-required) created by the template.
 
-The software catalog accepts any type value, but an organization should take
-great care to establish a proper taxonomy for these. Tools including Backstage
-itself may read this field and behave differently depending on its value. For
-example, a website type component may present tooling in the Backstage interface
-that is specific to just websites.
+### `spec.parameters` [required]
 
-The current set of well-known and common values for this field is:
+You can find out more about the `parameters` key
+[here](../software-templates/writing-templates.md)
 
-- `service` - a backend service, typically exposing an API
-- `website` - a website
-- `library` - a software library, such as an npm module or a Java library
+### `spec.steps` [optional]
 
-### `spec.templater` [required]
+You can find out more about the `steps` key
+[here](../software-templates/writing-templates.md)
 
-The templating library that is supported by the template skeleton as a string,
-e.g `cookiecutter`.
+### `spec.owner` [optional]
 
-Different skeletons will use different templating syntax, so it's common that
-the template will need to be run with a particular piece of software.
+An [entity reference](#string-references) to the owner of the component, e.g.
+`artist-relations-team`. This field is required.
 
-This key will be used to identify the correct templater which is registered into
-the `TemplatersBuilder`.
+In Backstage, the owner of a Template is the singular entity (commonly a team)
+that bears ultimate responsibility for the Template, and has the authority and
+capability to develop and maintain it. They will be the point of contact if
+something goes wrong, or if features are to be requested. The main purpose of
+this field is for display purposes in Backstage, so that people looking at
+catalog items can get an understanding of to whom this Template belongs. It is
+not to be used by automated processes to for example assign authorization in
+runtime systems. There may be others that also develop or otherwise touch the
+Template, but there will always be one ultimate owner.
 
-The values which are available by default are:
-
-- `cookiecutter` - [cookiecutter](https://github.com/cookiecutter/cookiecutter).
-
-### `spec.path` [optional]
-
-The string location where the templater should be run if it is not on the same
-level as the `template.yaml` definition, e.g. `./cookiecutter/skeleton`.
-
-This will set the `cwd` when running the templater to the folder path that you
-specify relative to the `template.yaml` definition.
-
-This is also particularly useful when you have multiple template definitions in
-the same repository but only a single `template.yaml` registered in backstage.
+| [`kind`](#apiversion-and-kind-required)                | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                              |
+| ------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| [`Group`](#kind-group) (default), [`User`](#kind-user) | Same as this entity, typically `default`   | [`ownerOf`, and reverse `ownedBy`](well-known-relations.md#ownedby-and-ownerof) |
 
 ## Kind: API
 
@@ -795,6 +878,7 @@ spec:
     picture: https://example.com/groups/bu-infrastructure.jpeg
   parent: ops
   children: [backstage, other]
+  members: [jdoe]
 ```
 
 In addition to the [common envelope metadata](#common-to-all-kinds-the-metadata)
@@ -851,6 +935,18 @@ The entries of this array are
 | [`kind`](#apiversion-and-kind-required) | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                                    |
 | --------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
 | [`Group`](#kind-group) (default)        | Same as this entity, typically `default`   | [`hasMember`, and reverse `memberOf`](well-known-relations.md#memberof-and-hasmember) |
+
+### `spec.members` [optional]
+
+The users that are direct members of this group. The items are not guaranteed to
+be ordered in any particular way.
+
+The entries of this array are
+[entity references](https://backstage.io/docs/features/software-catalog/references).
+
+| [`kind`](#apiversion-and-kind-required) | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                                    |
+| --------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [`User`](#kind-user) (default)          | Same as this entity, typically `default`   | [`hasMember`, and reverse `memberOf`](well-known-relations.md#memberof-and-hasmember) |
 
 ## Kind: User
 
@@ -987,6 +1083,17 @@ belongs to, e.g. `artist-engagement-portal`. This field is optional.
 | [`kind`](#apiversion-and-kind-required) | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                            |
 | --------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------- |
 | [`System`](#kind-system) (default)      | Same as this entity, typically `default`   | [`partOf`, and reverse `hasPart`](well-known-relations.md#partof-and-haspart) |
+
+### `spec.dependsOn` [optional]
+
+An array of [entity references](#string-references) to the components and
+resources that the resource depends on, e.g. `artist-lookup`. This field is
+optional.
+
+| [`kind`](#apiversion-and-kind-required) | Default [`namespace`](#namespace-optional) | Generated [relation](well-known-relations.md) type                                            |
+| --------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [`Component`](#kind-component)          | Same as this entity, typically `default`   | [`dependsOn`, and reverse `dependencyOf`](well-known-relations.md#dependson-and-dependencyof) |
+| [`Resource`](#kind-resource)            | Same as this entity, typically `default`   | [`dependsOn`, and reverse `dependencyOf`](well-known-relations.md#dependson-and-dependencyof) |
 
 ## Kind: System
 

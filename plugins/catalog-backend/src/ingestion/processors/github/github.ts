@@ -20,13 +20,15 @@ import { graphql } from '@octokit/graphql';
 // Graphql types
 
 export type QueryResponse = {
-  organization: Organization;
+  organization?: Organization;
+  repositoryOwner?: Organization | User;
 };
 
 export type Organization = {
   membersWithRole?: Connection<User>;
   team?: Team;
   teams?: Connection<Team>;
+  repositories?: Connection<Repository>;
 };
 
 export type PageInfo = {
@@ -40,6 +42,7 @@ export type User = {
   avatarUrl?: string;
   email?: string;
   name?: string;
+  repositories?: Connection<Repository>;
 };
 
 export type Team = {
@@ -50,6 +53,12 @@ export type Team = {
   avatarUrl?: string;
   parentTeam?: Team;
   members: Connection<User>;
+};
+
+export type Repository = {
+  name: string;
+  url: string;
+  isArchived: boolean;
 };
 
 export type Connection<T> = {
@@ -214,6 +223,39 @@ export async function getOrganizationTeams(
   );
 
   return { groups, groupMemberUsers };
+}
+
+export async function getOrganizationRepositories(
+  client: typeof graphql,
+  org: string,
+): Promise<{ repositories: Repository[] }> {
+  const query = `
+    query repositories($org: String!, $cursor: String) {
+      repositoryOwner(login: $org) {
+        login
+        repositories(first: 100, after: $cursor) {
+          nodes {
+            name
+            url
+            isArchived
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }`;
+
+  const repositories = await queryWithPaging(
+    client,
+    query,
+    r => r.repositoryOwner?.repositories,
+    x => x,
+    { org },
+  );
+
+  return { repositories };
 }
 
 /**

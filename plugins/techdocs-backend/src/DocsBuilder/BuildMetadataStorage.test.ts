@@ -17,10 +17,10 @@ import { BuildMetadataStorage } from './BuildMetadataStorage';
 
 describe('BuildMetadataStorage', () => {
   it('should return build timestamp', () => {
-    const newMetadataStorage = new BuildMetadataStorage('123abc');
-    newMetadataStorage.storeBuildTimestamp();
+    const newMetadataStorage = new BuildMetadataStorage('entityID123abc');
+    newMetadataStorage.setLastUpdated();
 
-    const timestamp = newMetadataStorage.getTimestamp();
+    const timestamp = newMetadataStorage.getLastUpdated();
 
     expect(timestamp).toBeLessThanOrEqual(Date.now());
   });

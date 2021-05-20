@@ -21,6 +21,7 @@ import { CatalogClient } from './CatalogClient';
 import { CatalogListResponse, DiscoveryApi } from './types';
 
 const server = setupServer();
+const token = 'fake-token';
 const mockBaseUrl = 'http://backstage:9191/i-am-a-mock-base';
 const discoveryApi: DiscoveryApi = {
   async getBaseUrl(_pluginId) {
@@ -71,11 +72,42 @@ describe('CatalogClient', () => {
     });
 
     it('should entities from correct endpoint', async () => {
-      const response = await client.getEntities();
+      const response = await client.getEntities({}, { token });
       expect(response).toEqual(defaultResponse);
     });
 
-    it('builds entity search filters properly', async () => {
+    it('builds multiple entity search filters properly', async () => {
+      expect.assertions(2);
+
+      server.use(
+        rest.get(`${mockBaseUrl}/entities`, (req, res, ctx) => {
+          expect(req.url.search).toBe(
+            '?filter=a=1,b=2,b=3,%C3%B6=%3D&filter=a=2',
+          );
+          return res(ctx.json([]));
+        }),
+      );
+
+      const response = await client.getEntities(
+        {
+          filter: [
+            {
+              a: '1',
+              b: ['2', '3'],
+              ö: '=',
+            },
+            {
+              a: '2',
+            },
+          ],
+        },
+        { token },
+      );
+
+      expect(response.items).toEqual([]);
+    });
+
+    it('builds single entity search filter properly', async () => {
       expect.assertions(2);
 
       server.use(
@@ -85,13 +117,16 @@ describe('CatalogClient', () => {
         }),
       );
 
-      const response = await client.getEntities({
-        filter: {
-          a: '1',
-          b: ['2', '3'],
-          ö: '=',
+      const response = await client.getEntities(
+        {
+          filter: {
+            a: '1',
+            b: ['2', '3'],
+            ö: '=',
+          },
         },
-      });
+        { token },
+      );
 
       expect(response.items).toEqual([]);
     });
@@ -106,11 +141,61 @@ describe('CatalogClient', () => {
         }),
       );
 
-      const response = await client.getEntities({
-        fields: ['a.b', 'ö'],
-      });
+      const response = await client.getEntities(
+        {
+          fields: ['a.b', 'ö'],
+        },
+        { token },
+      );
 
       expect(response.items).toEqual([]);
+    });
+  });
+
+  describe('getLocationById', () => {
+    const defaultResponse = {
+      data: {
+        id: '42',
+      },
+    };
+
+    beforeEach(() => {
+      server.use(
+        rest.get(`${mockBaseUrl}/locations/42`, (_, res, ctx) => {
+          return res(ctx.json(defaultResponse));
+        }),
+      );
+    });
+
+    it('should locations from correct endpoint', async () => {
+      const response = await client.getLocationById('42', { token });
+      expect(response).toEqual(defaultResponse);
+    });
+
+    it('forwards authorization token', async () => {
+      expect.assertions(1);
+
+      server.use(
+        rest.get(`${mockBaseUrl}/locations/42`, (req, res, ctx) => {
+          expect(req.headers.get('authorization')).toBe(`Bearer ${token}`);
+          return res(ctx.json(defaultResponse));
+        }),
+      );
+
+      await client.getLocationById('42', { token });
+    });
+
+    it('skips authorization header if token is omitted', async () => {
+      expect.assertions(1);
+
+      server.use(
+        rest.get(`${mockBaseUrl}/locations/42`, (req, res, ctx) => {
+          expect(req.headers.get('authorization')).toBeNull();
+          return res(ctx.json(defaultResponse));
+        }),
+      );
+
+      await client.getLocationById('42');
     });
   });
 });

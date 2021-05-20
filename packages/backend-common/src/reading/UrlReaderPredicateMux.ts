@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import { NotAllowedError } from '../errors';
+import { NotAllowedError } from '@backstage/errors';
 import {
   ReadTreeOptions,
   ReadTreeResponse,
+  SearchOptions,
+  SearchResponse,
   UrlReader,
   UrlReaderPredicateTuple,
 } from './types';
@@ -54,6 +56,18 @@ export class UrlReaderPredicateMux implements UrlReader {
     for (const { predicate, reader } of this.readers) {
       if (predicate(parsed)) {
         return await reader.readTree(url, options);
+      }
+    }
+
+    throw new NotAllowedError(`Reading from '${url}' is not allowed`);
+  }
+
+  async search(url: string, options?: SearchOptions): Promise<SearchResponse> {
+    const parsed = new URL(url);
+
+    for (const { predicate, reader } of this.readers) {
+      if (predicate(parsed)) {
+        return await reader.search(url, options);
       }
     }
 

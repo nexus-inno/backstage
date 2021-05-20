@@ -13,7 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import fs from 'fs';
+import type {
+  BlobUploadCommonResponse,
+  ContainerGetPropertiesResponse,
+} from '@azure/storage-blob';
+import { EventEmitter } from 'events';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+
+const rootDir = os.platform() === 'win32' ? 'C:\\rootDir' : '/rootDir';
+
+/**
+ * @param sourceFile Relative path to entity root dir. Contains either / or \ as file separator
+ * depending upon the OS.
+ */
+const checkFileExists = async (sourceFile: string): Promise<boolean> => {
+  // sourceFile will always have / as file separator irrespective of OS since Azure expects /.
+  // Normalize sourceFile to OS specific path before checking if file exists.
+  const relativeFilePath = sourceFile.split(path.posix.sep).join(path.sep);
+  const filePath = path.join(rootDir, sourceFile);
+
+  try {
+    await fs.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
 
 export class BlockBlobClient {
   private readonly blobName;
@@ -22,23 +49,55 @@ export class BlockBlobClient {
     this.blobName = blobName;
   }
 
-  uploadFile(source: string) {
-    return new Promise((resolve, reject) => {
-      if (!fs.existsSync(source)) {
-        reject('');
-      } else {
-        resolve('');
-      }
+  uploadFile(source: string): Promise<BlobUploadCommonResponse> {
+    if (!fs.existsSync(source)) {
+      return Promise.reject(new Error(`The file ${source} does not exist`));
+    }
+    return Promise.resolve({
+      _response: {
+        request: {
+          url: `https://example.blob.core.windows.net`,
+        } as any,
+        status: 200,
+        headers: {} as any,
+      },
     });
   }
 
   exists() {
-    return new Promise((resolve, reject) => {
-      if (fs.existsSync(this.blobName)) {
-        resolve(true);
+    return checkFileExists(this.blobName);
+  }
+
+  download() {
+    const filePath = path.join(rootDir, this.blobName);
+    const emitter = new EventEmitter();
+    setTimeout(() => {
+      if (fs.existsSync(filePath)) {
+        emitter.emit('data', fs.readFileSync(filePath));
+        emitter.emit('end');
       } else {
-        reject({ message: 'The object doest not exist !' });
+        emitter.emit(
+          'error',
+          new Error(`The file ${filePath} does not exist !`),
+        );
       }
+    }, 0);
+    return Promise.resolve({
+      readableStreamBody: emitter,
+    });
+  }
+}
+
+class BlockBlobClientFailUpload extends BlockBlobClient {
+  uploadFile(source: string): Promise<BlobUploadCommonResponse> {
+    return Promise.resolve({
+      _response: {
+        request: {
+          url: `https://example.blob.core.windows.net`,
+        } as any,
+        status: 500,
+        headers: {} as any,
+      },
     });
   }
 }
@@ -50,14 +109,42 @@ export class ContainerClient {
     this.containerName = containerName;
   }
 
-  getProperties() {
-    return new Promise(resolve => {
-      resolve('');
+  getProperties(): Promise<ContainerGetPropertiesResponse> {
+    return Promise.resolve({
+      _response: {
+        request: {
+          url: `https://example.blob.core.windows.net`,
+        } as any,
+        status: 200,
+        headers: {} as any,
+        parsedHeaders: {},
+      },
     });
   }
 
   getBlockBlobClient(blobName: string) {
     return new BlockBlobClient(blobName);
+  }
+}
+
+class ContainerClientFailGetProperties extends ContainerClient {
+  getProperties(): Promise<ContainerGetPropertiesResponse> {
+    return Promise.resolve({
+      _response: {
+        request: {
+          url: `https://example.blob.core.windows.net`,
+        } as any,
+        status: 404,
+        headers: {} as any,
+        parsedHeaders: {},
+      },
+    });
+  }
+}
+
+class ContainerClientFailUpload extends ContainerClient {
+  getBlockBlobClient(blobName: string) {
+    return new BlockBlobClientFailUpload(blobName);
   }
 }
 
@@ -71,6 +158,12 @@ export class BlobServiceClient {
   }
 
   getContainerClient(containerName: string) {
+    if (containerName === 'bad_container') {
+      return new ContainerClientFailGetProperties(containerName);
+    }
+    if (this.credential.accountName === 'failupload') {
+      return new ContainerClientFailUpload(containerName);
+    }
     return new ContainerClient(containerName);
   }
 }

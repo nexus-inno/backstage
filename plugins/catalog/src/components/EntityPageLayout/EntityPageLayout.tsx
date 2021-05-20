@@ -13,20 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Entity, ENTITY_DEFAULT_NAMESPACE } from '@backstage/catalog-model';
-import { Content, Header, HeaderLabel, Page, Progress } from '@backstage/core';
-import { Box } from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
-import React, { PropsWithChildren, useContext, useState } from 'react';
-import { useNavigate } from 'react-router';
+import {
+  Entity,
+  ENTITY_DEFAULT_NAMESPACE,
+  RELATION_OWNED_BY,
+} from '@backstage/catalog-model';
+import {
+  Content,
+  Header,
+  HeaderLabel,
+  IconComponent,
+  Link,
+  Page,
+  Progress,
+  ResponseErrorPanel,
+  WarningPanel,
+} from '@backstage/core';
 import {
   EntityContext,
+  EntityRefLinks,
+  getEntityRelations,
   useEntityCompoundName,
 } from '@backstage/plugin-catalog-react';
+import { Box } from '@material-ui/core';
+import React, { useContext, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { EntityContextMenu } from '../EntityContextMenu/EntityContextMenu';
 import { FavouriteEntity } from '../FavouriteEntity/FavouriteEntity';
 import { UnregisterEntityDialog } from '../UnregisterEntityDialog/UnregisterEntityDialog';
-
 import { Tabbed } from './Tabbed';
 
 const EntityPageTitle = ({
@@ -42,6 +56,29 @@ const EntityPageTitle = ({
   </Box>
 );
 
+const EntityLabels = ({ entity }: { entity: Entity }) => {
+  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
+  return (
+    <>
+      {ownedByRelations.length > 0 && (
+        <HeaderLabel
+          label="Owner"
+          value={
+            <EntityRefLinks
+              entityRefs={ownedByRelations}
+              defaultKind="Group"
+              color="inherit"
+            />
+          }
+        />
+      )}
+      {entity.spec?.lifecycle && (
+        <HeaderLabel label="Lifecycle" value={entity.spec.lifecycle} />
+      )}
+    </>
+  );
+};
+
 const headerProps = (
   kind: string,
   namespace: string | undefined,
@@ -55,17 +92,33 @@ const headerProps = (
         : ''
     }`,
     headerType: (() => {
-      let t = kind.toLowerCase();
+      let t = kind.toLocaleLowerCase('en-US');
       if (entity && entity.spec && 'type' in entity.spec) {
         t += ' — ';
-        t += (entity.spec as { type: string }).type.toLowerCase();
+        t += (entity.spec as { type: string }).type.toLocaleLowerCase('en-US');
       }
       return t;
     })(),
   };
 };
 
-export const EntityPageLayout = ({ children }: PropsWithChildren<{}>) => {
+// NOTE(freben): Intentionally not exported at this point, since it's part of
+// the unstable extra context menu items concept below
+type ExtraContextMenuItem = {
+  title: string;
+  Icon: IconComponent;
+  onClick: () => void;
+};
+
+type EntityPageLayoutProps = {
+  UNSTABLE_extraContextMenuItems?: ExtraContextMenuItem[];
+  children?: React.ReactNode;
+};
+
+export const EntityPageLayout = ({
+  children,
+  UNSTABLE_extraContextMenuItems,
+}: EntityPageLayoutProps) => {
   const { kind, namespace, name } = useEntityCompoundName();
   const { entity, loading, error } = useContext(EntityContext);
   const { headerTitle, headerType } = headerProps(
@@ -91,31 +144,44 @@ export const EntityPageLayout = ({ children }: PropsWithChildren<{}>) => {
         pageTitleOverride={headerTitle}
         type={headerType}
       >
-        {/* TODO: fix after catalog page customization is added */}
-        {entity && kind !== 'user' && (
+        {/* TODO: Make entity labels configurable for entity kind / type */}
+        {entity && (
           <>
-            <HeaderLabel
-              label="Owner"
-              value={entity.spec?.owner || 'unknown'}
+            <EntityLabels entity={entity} />
+            <EntityContextMenu
+              UNSTABLE_extraContextMenuItems={UNSTABLE_extraContextMenuItems}
+              onUnregisterEntity={showRemovalDialog}
             />
-            <HeaderLabel
-              label="Lifecycle"
-              value={entity.spec?.lifecycle || 'unknown'}
-            />
-            <EntityContextMenu onUnregisterEntity={showRemovalDialog} />
           </>
         )}
       </Header>
 
-      {loading && <Progress />}
+      {loading && (
+        <Content>
+          <Progress />
+        </Content>
+      )}
 
       {entity && <Tabbed.Layout>{children}</Tabbed.Layout>}
 
       {error && (
         <Content>
-          <Alert severity="error">{error.toString()}</Alert>
+          <ResponseErrorPanel error={error} />
         </Content>
       )}
+
+      {!loading && !error && !entity && (
+        <Content>
+          <WarningPanel title="Entity not found">
+            There is no {kind} with the requested{' '}
+            <Link to="https://backstage.io/docs/features/software-catalog/references">
+              kind, namespace, and name
+            </Link>
+            .
+          </WarningPanel>
+        </Content>
+      )}
+
       <UnregisterEntityDialog
         open={confirmationDialogOpen}
         entity={entity!}
@@ -125,4 +191,5 @@ export const EntityPageLayout = ({ children }: PropsWithChildren<{}>) => {
     </Page>
   );
 };
+
 EntityPageLayout.Content = Tabbed.Content;

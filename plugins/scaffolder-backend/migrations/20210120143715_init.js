@@ -17,7 +17,7 @@
 // @ts-check
 
 /**
- * @param {import('knex')} knex
+ * @param {import('knex').Knex} knex
  */
 exports.up = async function up(knex) {
   await knex.schema.createTable('tasks', table => {
@@ -72,12 +72,12 @@ exports.up = async function up(knex) {
 };
 
 /**
- * @param {import('knex')} knex
+ * @param {import('knex').Knex} knex
  */
 exports.down = async function down(knex) {
   if (knex.client.config.client !== 'sqlite3') {
     await knex.schema.alterTable('task_events', table => {
-      table.dropIndex([], 'ctask_events_task_id_idx');
+      table.dropIndex([], 'task_events_task_id_idx');
     });
   }
   await knex.schema.dropTable('task_events');

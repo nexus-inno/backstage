@@ -1,5 +1,37 @@
 # @backstage/plugin-newrelic
 
+## 0.2.7
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [4c049a1a1]
+  - @backstage/core@0.7.0
+
+## 0.2.5
+
+### Patch Changes
+
+- c5ab91ce3: Migrate to new composability API, exporting the plugin instance as `newRelicPlugin`, and the root page as `NewRelicPage`.
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.2.4
 
 ### Patch Changes

@@ -29,22 +29,22 @@ jest.doMock('fs-extra', () => ({
 }));
 
 import {
-  SingleConnectionDatabaseManager,
-  PluginDatabaseManager,
   getVoidLogger,
+  PluginDatabaseManager,
+  SingleConnectionDatabaseManager,
+  UrlReaders,
 } from '@backstage/backend-common';
+import { CatalogApi } from '@backstage/catalog-client';
 import { ConfigReader } from '@backstage/config';
 import express from 'express';
 import request from 'supertest';
+import { Preparers, Publishers, Templaters } from '../scaffolder';
 import { createRouter } from './router';
-import { Templaters, Preparers, Publishers } from '../scaffolder';
-import Docker from 'dockerode';
 
-jest.mock('dockerode');
-
-const generateEntityClient: any = (template: any) => ({
-  findTemplate: () => Promise.resolve(template),
-});
+const createCatalogClient = (templates: any[] = []) =>
+  ({
+    getEntities: async () => ({ items: templates }),
+  } as CatalogApi);
 
 function createDatabase(): PluginDatabaseManager {
   return SingleConnectionDatabaseManager.fromConfig(
@@ -59,119 +59,9 @@ function createDatabase(): PluginDatabaseManager {
   ).forPlugin('scaffolder');
 }
 
-describe('createRouter - working directory', () => {
-  const mockPrepare = jest.fn();
-  const mockPreparers = new Preparers();
-
-  beforeAll(() => {
-    const mockPreparer = {
-      prepare: mockPrepare,
-    };
-    mockPreparers.register('dev.azure.com', mockPreparer);
-  });
-
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
-
-  const workDirConfig = (path: string) => ({
-    backend: {
-      workingDirectory: path,
-    },
-  });
-
-  const template = {
-    apiVersion: 'backstage.io/v1alpha1',
-    kind: 'Template',
-    metadata: {
-      annotations: {
-        'backstage.io/managed-by-location': 'url:https://dev.azure.com',
-      },
-    },
-    spec: {
-      owner: 'template@backstage.io',
-      path: '.',
-      schema: {},
-    },
-  };
-
-  const mockedEntityClient = generateEntityClient(template);
-  it('should throw an error when working directory does not exist or is not writable', async () => {
-    mockAccess.mockImplementation(() => {
-      throw new Error('access error');
-    });
-
-    await expect(
-      createRouter({
-        logger: getVoidLogger(),
-        preparers: new Preparers(),
-        templaters: new Templaters(),
-        publishers: new Publishers(),
-        config: new ConfigReader(workDirConfig('/path')),
-        dockerClient: new Docker(),
-        entityClient: mockedEntityClient,
-        database: createDatabase(),
-      }),
-    ).rejects.toThrow('access error');
-  });
-
-  it('should use the working directory when configured', async () => {
-    const router = await createRouter({
-      logger: getVoidLogger(),
-      preparers: mockPreparers,
-      templaters: new Templaters(),
-      publishers: new Publishers(),
-      config: new ConfigReader(workDirConfig('/path')),
-      dockerClient: new Docker(),
-      entityClient: mockedEntityClient,
-      database: createDatabase(),
-    });
-
-    const app = express().use(router);
-    await request(app)
-      .post('/v1/jobs')
-      .send({
-        templateName: '',
-        values: {
-          storePath: 'https://github.com/backstage/good',
-        },
-      });
-
-    expect(mockPrepare).toBeCalledWith({
-      logger: expect.anything(),
-      workspacePath: expect.stringContaining('path'),
-      url: expect.anything(),
-    });
-  });
-
-  it('should not pass along anything when no working directory is configured', async () => {
-    const router = await createRouter({
-      logger: getVoidLogger(),
-      preparers: mockPreparers,
-      templaters: new Templaters(),
-      publishers: new Publishers(),
-      config: new ConfigReader({}),
-      dockerClient: new Docker(),
-      entityClient: mockedEntityClient,
-      database: createDatabase(),
-    });
-
-    const app = express().use(router);
-    await request(app)
-      .post('/v1/jobs')
-      .send({
-        templateName: '',
-        values: {
-          storePath: 'https://github.com/backstage/goodrepo',
-        },
-      });
-
-    expect(mockPrepare).toBeCalledWith({
-      logger: expect.anything(),
-      workspacePath: expect.anything(),
-      url: expect.anything(),
-    });
-  });
+const mockUrlReader = UrlReaders.default({
+  logger: getVoidLogger(),
+  config: new ConfigReader({}),
 });
 
 describe('createRouter', () => {
@@ -184,6 +74,9 @@ describe('createRouter', () => {
       name: 'create-react-app-template',
       tags: ['experimental', 'react', 'cra'],
       title: 'Create React App Template',
+      annotations: {
+        'backstage.io/managed-by-location': 'url:https://dev.azure.com',
+      },
     },
     spec: {
       owner: 'web@example.com',
@@ -221,9 +114,9 @@ describe('createRouter', () => {
       templaters: new Templaters(),
       publishers: new Publishers(),
       config: new ConfigReader({}),
-      dockerClient: new Docker(),
-      entityClient: generateEntityClient(template),
       database: createDatabase(),
+      catalogClient: createCatalogClient([template]),
+      reader: mockUrlReader,
     });
     app = express().use(router);
   });
@@ -232,10 +125,19 @@ describe('createRouter', () => {
     jest.resetAllMocks();
   });
 
-  describe('POST /v1/jobs', () => {
+  describe('GET /v2/actions', () => {
+    it('lists available actions', async () => {
+      const response = await request(app).get('/v2/actions').send();
+      expect(response.status).toEqual(200);
+      expect(response.body[0].id).toBeDefined();
+      expect(response.body.length).toBeGreaterThan(8);
+    });
+  });
+
+  describe('POST /v2/tasks', () => {
     it('rejects template values which do not match the template schema definition', async () => {
       const response = await request(app)
-        .post('/v1/jobs')
+        .post('/v2/tasks')
         .send({
           templateName: '',
           values: {
@@ -244,6 +146,46 @@ describe('createRouter', () => {
         });
 
       expect(response.status).toEqual(400);
+    });
+
+    it('return the template id', async () => {
+      const response = await request(app)
+        .post('/v2/tasks')
+        .send({
+          templateName: 'create-react-app-template',
+          values: {
+            storePath: 'https://github.com/backstage/backstage',
+            component_id: '123',
+            name: 'test',
+            use_typescript: false,
+          },
+        });
+
+      expect(response.body.id).toBeDefined();
+      expect(response.status).toEqual(201);
+    });
+  });
+
+  describe('GET /v2/tasks/:taskId', () => {
+    it('does not divulge secrets', async () => {
+      const postResponse = await request(app)
+        .post('/v2/tasks')
+        .set('Authorization', 'Bearer secret')
+        .send({
+          templateName: 'create-react-app-template',
+          values: {
+            storePath: 'https://github.com/backstage/backstage',
+            component_id: '123',
+            name: 'test',
+            use_typescript: false,
+          },
+        });
+
+      const response = await request(app)
+        .get(`/v2/tasks/${postResponse.body.id}`)
+        .send();
+      expect(response.status).toEqual(200);
+      expect(response.body.secrets).toBeUndefined();
     });
   });
 });

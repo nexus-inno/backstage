@@ -72,8 +72,8 @@ async function readBuildInfo() {
 }
 
 async function loadLernaPackages(): Promise<LernaPackage[]> {
-  const LernaProject = require('@lerna/project');
-  const project = new LernaProject(cliPaths.targetDir);
+  const { Project } = require('@lerna/project');
+  const project = new Project(cliPaths.targetDir);
   return project.getPackages();
 }
 
@@ -97,15 +97,18 @@ export async function createConfig(
   if (checksEnabled) {
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: paths.targetTsConfig,
-        eslint: true,
-        eslintOptions: {
-          parserOptions: {
-            project: paths.targetTsConfig,
-            tsconfigRootDir: paths.targetPath,
+        typescript: {
+          configFile: paths.targetTsConfig,
+        },
+        eslint: {
+          files: ['**', '!**/__tests__/**', '!**/?(*.)(spec|test).*'],
+          options: {
+            parserOptions: {
+              project: paths.targetTsConfig,
+              tsconfigRootDir: paths.targetPath,
+            },
           },
         },
-        reportFiles: ['**', '!**/__tests__/**', '!**/?(*.)(spec|test).*'],
       }),
     );
   }
@@ -127,6 +130,16 @@ export async function createConfig(
           googleAnalyticsTrackingId: frontendConfig.getOptionalString(
             'app.googleAnalyticsTrackingId',
           ),
+          datadogRum: {
+            env: frontendConfig.getOptionalString('app.datadogRum.env'),
+            clientToken: frontendConfig.getOptionalString(
+              'app.datadogRum.clientToken',
+            ),
+            applicationId: frontendConfig.getOptionalString(
+              'app.datadogRum.applicationId',
+            ),
+            site: frontendConfig.getOptionalString('app.datadogRum.site'),
+          },
         },
       },
     }),
@@ -281,15 +294,18 @@ export async function createBackendConfig(
       ...(checksEnabled
         ? [
             new ForkTsCheckerWebpackPlugin({
-              tsconfig: paths.targetTsConfig,
-              eslint: true,
-              eslintOptions: {
-                parserOptions: {
-                  project: paths.targetTsConfig,
-                  tsconfigRootDir: paths.targetPath,
+              typescript: {
+                configFile: paths.targetTsConfig,
+              },
+              eslint: {
+                files: ['**', '!**/__tests__/**', '!**/?(*.)(spec|test).*'],
+                options: {
+                  parserOptions: {
+                    project: paths.targetTsConfig,
+                    tsconfigRootDir: paths.targetPath,
+                  },
                 },
               },
-              reportFiles: ['**', '!**/__tests__/**', '!**/?(*.)(spec|test).*'],
             }),
           ]
         : []),

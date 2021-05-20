@@ -43,7 +43,7 @@ export async function serveBundle(options: ServeOptions) {
   const compiler = webpack(config);
 
   const server = new WebpackDevServer(compiler, {
-    hot: true,
+    hot: !process.env.CI,
     contentBase: paths.targetPublic,
     contentBasePublicPath: config.output?.publicPath,
     publicPath: config.output?.publicPath,
@@ -58,6 +58,8 @@ export async function serveBundle(options: ServeOptions) {
     host,
     port,
     proxy: pkg.proxy,
+    // When the dev server is behind a proxy, the host and public hostname differ
+    allowedHosts: [url.hostname],
   });
 
   await new Promise<void>((resolve, reject) => {

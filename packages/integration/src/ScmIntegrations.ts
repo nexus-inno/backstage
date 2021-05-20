@@ -19,11 +19,9 @@ import { AzureIntegration } from './azure/AzureIntegration';
 import { BitbucketIntegration } from './bitbucket/BitbucketIntegration';
 import { GitHubIntegration } from './github/GitHubIntegration';
 import { GitLabIntegration } from './gitlab/GitLabIntegration';
-import {
-  ScmIntegration,
-  ScmIntegrationRegistry,
-  ScmIntegrationsGroup,
-} from './types';
+import { defaultScmResolveUrl } from './helpers';
+import { ScmIntegration, ScmIntegrationsGroup } from './types';
+import { ScmIntegrationRegistry } from './registry';
 
 type IntegrationsByType = {
   azure: ScmIntegrationsGroup<AzureIntegration>;
@@ -82,12 +80,25 @@ export class ScmIntegrations implements ScmIntegrationRegistry {
       .find(Boolean);
   }
 
-  resolveUrl(options: { url: string; base: string }): string {
-    const resolve = this.byUrl(options.base)?.resolveUrl;
-    if (!resolve) {
-      return new URL(options.url, options.base).toString();
+  resolveUrl(options: {
+    url: string;
+    base: string;
+    lineNumber?: number;
+  }): string {
+    const integration = this.byUrl(options.base);
+    if (!integration) {
+      return defaultScmResolveUrl(options);
     }
 
-    return resolve(options);
+    return integration.resolveUrl(options);
+  }
+
+  resolveEditUrl(url: string): string {
+    const integration = this.byUrl(url);
+    if (!integration) {
+      return url;
+    }
+
+    return integration.resolveEditUrl(url);
   }
 }

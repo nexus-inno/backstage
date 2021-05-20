@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
+export type JsonPrimitive = number | string | boolean | null;
 export type JsonObject = { [key in string]?: JsonValue };
-export type JsonArray = JsonValue[];
-export type JsonValue =
-  | JsonObject
-  | JsonArray
-  | number
-  | string
-  | boolean
-  | null;
+export interface JsonArray extends Array<JsonValue> {}
+export type JsonValue = JsonObject | JsonArray | JsonPrimitive;
 
 export type AppConfig = {
   context: string;
@@ -34,8 +29,8 @@ export type Config = {
 
   keys(): string[];
 
-  get(key?: string): JsonValue;
-  getOptional(key?: string): JsonValue | undefined;
+  get<T = JsonValue>(key?: string): T;
+  getOptional<T = JsonValue>(key?: string): T | undefined;
 
   getConfig(key: string): Config;
   getOptionalConfig(key: string): Config | undefined;

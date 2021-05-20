@@ -17,7 +17,7 @@ import React from 'react';
 import { AlertStatusSummary } from './AlertStatusSummary';
 import { render } from '@testing-library/react';
 import { Alert, AlertStatus } from '../../types';
-import { MockScrollProvider } from '../../utils/tests';
+import { MockScrollProvider } from '../../testUtils';
 
 const mockSnoozed: Alert = {
   title: 'snoozed-title',
@@ -50,8 +50,8 @@ describe('<AlertStatusSummary />', () => {
       </MockScrollProvider>,
     );
     [mockSnoozed, mockAccepted, mockDismissed].forEach(a => {
-      expect(getByText(a.title)).toBeInTheDocument();
-      expect(getByText(a.subtitle)).toBeInTheDocument();
+      expect(getByText(a.title as string)).toBeInTheDocument();
+      expect(getByText(a.subtitle as string)).toBeInTheDocument();
       expect(getByRole('img', { name: a.status })).toBeInTheDocument();
     });
   });

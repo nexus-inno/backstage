@@ -1,5 +1,67 @@
 # @backstage/integration
 
+## 0.5.3
+
+### Patch Changes
+
+- 65e6c4541: Remove circular dependencies
+
+## 0.5.2
+
+### Patch Changes
+
+- 38ca05168: The default `@octokit/rest` dependency was bumped to `"^18.5.3"`.
+- Updated dependencies [d8b81fd28]
+  - @backstage/config@0.1.5
+
+## 0.5.1
+
+### Patch Changes
+
+- 277644e09: Include missing fields in GitLab config schema. This sometimes prevented loading config on the frontend specifically, when using self-hosted GitLab.
+- 52f613030: Support GitHub `tree` URLs in `getGitHubFileFetchUrl`.
+- 905cbfc96: Add `resolveEditUrl` to integrations to resolve a URL that can be used to edit
+  a file in the web interfaces of an SCM.
+- d4e77ec5f: Add option to `resolveUrl` that allows for linking to a specific line number when resolving a file URL.
+
+## 0.5.0
+
+### Minor Changes
+
+- 491f3a0ec: Make `ScmIntegration.resolveUrl` mandatory.
+
+## 0.4.0
+
+### Minor Changes
+
+- ffffea8e6: Update the `GitLabIntegrationConfig` to require the fields `apiBaseUrl` and `baseUrl`. The `readGitLabIntegrationConfig` function is now more strict and has better error reporting. This change mirrors actual reality in code more properly - the fields are actually necessary for many parts of code to actually function, so they should no longer be optional.
+
+  Some checks that used to happen deep inside code that consumed config, now happen upfront at startup. This means that you may encounter new errors at backend startup, if you had actual mistakes in config but didn't happen to exercise the code paths that actually would break. But for most users, no change will be necessary.
+
+  An example minimal GitLab config block that just adds a token to public GitLab would look similar to this:
+
+  ```yaml
+  integrations:
+    gitlab:
+      - host: gitlab.com
+        token:
+          $env: GITLAB_TOKEN
+  ```
+
+  A full fledged config that points to a locally hosted GitLab could look like this:
+
+  ```yaml
+  integrations:
+    gitlab:
+      - host: gitlab.my-company.com
+        apiBaseUrl: https://gitlab.my-company.com/api/v4
+        baseUrl: https://gitlab.my-company.com
+        token:
+          $env: OUR_GITLAB_TOKEN
+  ```
+
+  In this case, the only optional field is `baseUrl` which is formed from the `host` if needed.
+
 ## 0.3.2
 
 ### Patch Changes

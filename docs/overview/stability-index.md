@@ -153,6 +153,13 @@ re-exported from @backstage/core, and this package should not be used directly.
 
 Stability: See @backstage/core
 
+### `cost-insights` [GitHub](https://github.com/backstage/backstage/tree/master/plugins/cost-insights)
+
+A frontend plugin that allows users to visualize, understand and optimize your
+team's cloud costs.
+
+Stability: `1`
+
 ### `create-app` [GitHub](https://github.com/backstage/backstage/tree/master/packages/create-app/)
 
 The CLI used to scaffold new Backstage projects.
@@ -359,7 +366,7 @@ https://github.com/backstage/backstage/issues/2771.
 
 ### `tech-radar` [GitHub](https://github.com/backstage/backstage/tree/master/plugins/tech-radar/)
 
-Visualize the your company's official guidelines of different areas of software
+Visualize your company's official guidelines of different areas of software
 development.
 
 Stability: `0`
@@ -384,11 +391,3 @@ A frontend plugin that provides a page where the user can tweak various
 settings.
 
 Stability: `1`
-
-### `welcome` [GitHub](https://github.com/backstage/backstage/tree/master/plugins/welcome/)
-
-A plugin that can be used to welcome the user to Backstage.
-
-Stability: `0`. This used to be the start page for the example app, but has been
-replaced by the catalog plugin. It is still viewable at `/welcome` but may be
-removed.

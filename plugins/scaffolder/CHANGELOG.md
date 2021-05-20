@@ -1,5 +1,404 @@
 # @backstage/plugin-scaffolder
 
+## 0.9.5
+
+### Patch Changes
+
+- f7f7783a3: Add Owner field in template card and new data distribution
+  Add spec.owner as optional field into TemplateV1Alpha and TemplateV1Beta Schema
+  Add relations ownedBy and ownerOf into Template entity
+  Template documentation updated
+- 81d7b9c6f: Added deprecation warnings for `v1alpha1` templates
+- Updated dependencies [f7f7783a3]
+- Updated dependencies [65e6c4541]
+- Updated dependencies [68fdbf014]
+- Updated dependencies [5da6a561d]
+  - @backstage/catalog-model@0.7.10
+  - @backstage/core@0.7.10
+  - @backstage/integration@0.5.3
+
+## 0.9.4
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 81ef1d57b: Show error on task page if task does not exist.
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [10c008a3a]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [16be1d093]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+  - @backstage/integration-react@0.1.2
+  - @backstage/plugin-catalog-react@0.1.6
+  - @backstage/catalog-model@0.7.9
+
+## 0.9.3
+
+### Patch Changes
+
+- 9314a8592: Close eventSource upon completion of a scaffolder task
+- d8b81fd28: Bump `json-schema` dependency from `0.2.5` to `0.3.0`.
+- Updated dependencies [38ca05168]
+- Updated dependencies [f65adcde7]
+- Updated dependencies [81c54d1f2]
+- Updated dependencies [80888659b]
+- Updated dependencies [7b8272fb7]
+- Updated dependencies [d8b81fd28]
+- Updated dependencies [d1b1306d9]
+  - @backstage/integration@0.5.2
+  - @backstage/core@0.7.8
+  - @backstage/plugin-catalog-react@0.1.5
+  - @backstage/theme@0.2.7
+  - @backstage/catalog-model@0.7.8
+  - @backstage/config@0.1.5
+  - @backstage/catalog-client@0.3.11
+
+## 0.9.2
+
+### Patch Changes
+
+- f6efa71ee: Enable starred templates on Scaffolder frontend
+- 19a4dd710: Removed unused `swr` dependency.
+- 23769512a: Support `anyOf`, `oneOf` and `allOf` schemas in the scaffolder template.
+- Updated dependencies [9afcac5af]
+- Updated dependencies [e0c9ed759]
+- Updated dependencies [6eaecbd81]
+  - @backstage/core@0.7.7
+
+## 0.9.1
+
+### Patch Changes
+
+- 99fbef232: Adding Headings for Accessibility on the Scaffolder Plugin
+- cb0206b2b: Respect top-level UI schema keys in scaffolder forms. Allows more advanced RJSF features such as explicit field ordering.
+- Updated dependencies [94da20976]
+- Updated dependencies [d8cc7e67a]
+- Updated dependencies [99fbef232]
+- Updated dependencies [ab07d77f6]
+- Updated dependencies [931b21a12]
+- Updated dependencies [937ed39ce]
+- Updated dependencies [9a9e7a42f]
+- Updated dependencies [50ce875a0]
+  - @backstage/core@0.7.6
+  - @backstage/theme@0.2.6
+
+## 0.9.0
+
+### Minor Changes
+
+- a360f9478: Expose the catalog-import route as an external route from the scaffolder.
+
+  This will make it possible to hide the "Register Existing Component" button
+  when you for example are running backstage with `catalog.readonly=true`.
+
+  As a consequence of this change you need add a new binding to your createApp call to
+  keep the button visible. However, if you instead want to hide the button you can safely
+  ignore the following example.
+
+  To bind the external route from the catalog-import plugin to the scaffolder template
+  index page, make sure you have the appropriate imports and add the following
+  to the createApp call:
+
+  ```typescript
+  import { catalogImportPlugin } from '@backstage/plugin-catalog-import';
+
+  const app = createApp({
+    // ...
+    bindRoutes({ bind }) {
+      // ...
+      bind(scaffolderPlugin.externalRoutes, {
+        registerComponent: catalogImportPlugin.routes.importPage,
+      });
+    },
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies [bb5055aee]
+- Updated dependencies [d0d1c2f7b]
+- Updated dependencies [5d0740563]
+- Updated dependencies [5cafcf452]
+- Updated dependencies [86a95ba67]
+- Updated dependencies [442f34b87]
+- Updated dependencies [e27cb6c45]
+  - @backstage/catalog-model@0.7.7
+  - @backstage/core@0.7.5
+  - @backstage/catalog-client@0.3.10
+
+## 0.8.2
+
+### Patch Changes
+
+- 3f96a9d5a: Support auth by sending cookies in event stream request
+- 98dd5da71: Add support for multiple links to post-scaffold task summary page
+- Updated dependencies [1279a3325]
+- Updated dependencies [4a4681b1b]
+- Updated dependencies [97b60de98]
+- Updated dependencies [b051e770c]
+- Updated dependencies [98dd5da71]
+  - @backstage/core@0.7.4
+  - @backstage/catalog-model@0.7.6
+
+## 0.8.1
+
+### Patch Changes
+
+- 2ab6f3ff0: Add OwnerPicker component to scaffolder for specifying a component's owner from users and groups in the catalog.
+- 676ede643: Added the `getOriginLocationByEntity` and `removeLocationById` methods to the catalog client
+- Updated dependencies [676ede643]
+- Updated dependencies [9f48b548c]
+- Updated dependencies [b196a4569]
+- Updated dependencies [8488a1a96]
+  - @backstage/catalog-client@0.3.9
+  - @backstage/plugin-catalog-react@0.1.4
+  - @backstage/catalog-model@0.7.5
+
+## 0.8.0
+
+### Minor Changes
+
+- 3385b374b: Use `scmIntegrationsApiRef` from the new `@backstage/integration-react`.
+
+### Patch Changes
+
+- 9ca0e4009: use local version of lowerCase and upperCase methods
+- Updated dependencies [8686eb38c]
+- Updated dependencies [0434853a5]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [9ca0e4009]
+- Updated dependencies [34ff49b0f]
+  - @backstage/catalog-client@0.3.8
+  - @backstage/config@0.1.4
+  - @backstage/core@0.7.2
+  - @backstage/plugin-catalog-react@0.1.2
+
+## 0.7.1
+
+### Patch Changes
+
+- f98f212e4: Introduce scaffolder actions page which lists all available actions along with documentation about their input/output.
+
+  Allow for actions to be extended with a description.
+
+  The list actions page is by default available at `/create/actions`.
+
+- 2089de76b: Make use of the new core `ItemCardGrid` and `ItemCardHeader` instead of the deprecated `ItemCard`.
+- 4202807bb: Added a default type when is not defined in the schema to prevent id collision
+- Updated dependencies [277644e09]
+- Updated dependencies [52f613030]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [ff4d666ab]
+- Updated dependencies [905cbfc96]
+- Updated dependencies [2089de76b]
+- Updated dependencies [d4e77ec5f]
+- Updated dependencies [dc1fc92c8]
+  - @backstage/integration@0.5.1
+  - @backstage/catalog-model@0.7.4
+  - @backstage/catalog-client@0.3.7
+  - @backstage/core@0.7.1
+  - @backstage/theme@0.2.4
+
+## 0.7.0
+
+### Minor Changes
+
+- 8106c9528: The scaffolder has been updated to support the new `v1beta2` template schema which allows for custom template actions!
+
+  See documentation for more information how to create and register new template actions.
+
+  **Breaking changes**
+
+  The backend scaffolder plugin now needs a `UrlReader` which can be pulled from the PluginEnvironment.
+
+  The following change is required in `backend/src/plugins/scaffolder.ts`
+
+  ```diff
+   export default async function createPlugin({
+     logger,
+     config,
+     database,
+  +  reader,
+   }: PluginEnvironment): Promise<Router> {
+
+    // omitted code
+
+    return await createRouter({
+      preparers,
+      templaters,
+      publishers,
+      logger,
+      config,
+      dockerClient,
+      database,
+      catalogClient,
+  +   reader,
+    });
+  ```
+
+### Patch Changes
+
+- 12d8f27a6: Move logic for constructing the template form to the backend, using a new `./parameter-schema` endpoint that returns the form schema for a given template.
+- bc327dc42: Tweak the template cards to be even more compliant with MUI examples, and a little bit more dense.
+- Updated dependencies [12d8f27a6]
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [9d455f69a]
+- Updated dependencies [4c049a1a1]
+- Updated dependencies [02816ecd7]
+  - @backstage/catalog-model@0.7.3
+  - @backstage/core@0.7.0
+  - @backstage/plugin-catalog-react@0.1.1
+
+## 0.6.0
+
+### Minor Changes
+
+- a5f42cf66: The Scaffolder and Catalog plugins have been migrated to partially require use of the [new composability API](https://backstage.io/docs/plugins/composability). The Scaffolder used to register its pages using the deprecated route registration plugin API, but those registrations have been removed. This means you now need to add the Scaffolder plugin page to the app directly.
+
+  The page is imported from the Scaffolder plugin and added to the `<FlatRoutes>` component:
+
+  ```tsx
+  <Route path="/create" element={<ScaffolderPage />} />
+  ```
+
+  The Catalog plugin has also been migrated to use an [external route reference](https://backstage.io/docs/plugins/composability#binding-external-routes-in-the-app) to dynamically link to the create component page. This means you need to migrate the catalog plugin to use the new extension components, as well as bind the external route.
+
+  To use the new extension components, replace existing usage of the `CatalogRouter` with the following:
+
+  ```tsx
+  <Route path="/catalog" element={<CatalogIndexPage />} />
+  <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />}>
+    <EntityPage />
+  </Route>
+  ```
+
+  And to bind the external route from the catalog plugin to the scaffolder template index page, make sure you have the appropriate imports and add the following to the `createApp` call:
+
+  ```ts
+  import { catalogPlugin } from '@backstage/plugin-catalog';
+  import { scaffolderPlugin } from '@backstage/plugin-scaffolder';
+
+  const app = createApp({
+    // ...
+    bindRoutes({ bind }) {
+      bind(catalogPlugin.externalRoutes, {
+        createComponent: scaffolderPlugin.routes.root,
+      });
+    },
+  });
+  ```
+
+- d0760ecdf: Moved common useStarredEntities hook to plugin-catalog-react
+- e8e35fb5f: Adding Search and Filter features to Scaffolder/Templates Grid
+
+### Patch Changes
+
+- a5f42cf66: # Stateless scaffolding
+
+  The scaffolder has been redesigned to be horizontally scalable and to persistently store task state and execution logs in the database.
+
+  Each scaffolder task is given a unique task ID which is persisted in the database.
+  Tasks are then picked up by a `TaskWorker` which performs the scaffolding steps.
+  Execution logs are also persisted in the database meaning you can now refresh the scaffolder task status page without losing information.
+
+  The task status page is now dynamically created based on the step information stored in the database.
+  This allows for custom steps to be displayed once the next version of the scaffolder template schema is available.
+
+  The task page is updated to display links to both the git repository and to the newly created catalog entity.
+
+  Component registration has moved from the frontend into a separate registration step executed by the `TaskWorker`. This requires that a `CatalogClient` is passed to the scaffolder backend instead of the old `CatalogEntityClient`.
+
+  Make sure to update `plugins/scaffolder.ts`
+
+  ```diff
+   import {
+     CookieCutter,
+     createRouter,
+     Preparers,
+     Publishers,
+     CreateReactAppTemplater,
+     Templaters,
+  -  CatalogEntityClient,
+   } from '@backstage/plugin-scaffolder-backend';
+
+  +import { CatalogClient } from '@backstage/catalog-client';
+
+   const discovery = SingleHostDiscovery.fromConfig(config);
+  -const entityClient = new CatalogEntityClient({ discovery });
+  +const catalogClient = new CatalogClient({ discoveryApi: discovery })
+
+   return await createRouter({
+     preparers,
+     templaters,
+     publishers,
+     logger,
+     config,
+     dockerClient,
+  -  entityClient,
+     database,
+  +  catalogClient,
+   });
+  ```
+
+  As well as adding the `@backstage/catalog-client` packages as a dependency of your backend package.
+
+- e488f0502: Update messages that process during loading, error, and no templates found.
+  Remove unused dependencies.
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [d0760ecdf]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [88f1f1b60]
+- Updated dependencies [bad21a085]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [5c2e2863f]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [a1f5e6545]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core@0.6.3
+  - @backstage/plugin-catalog-react@0.1.0
+  - @backstage/catalog-model@0.7.2
+  - @backstage/config@0.1.3
+
+## 0.5.1
+
+### Patch Changes
+
+- 6c4a76c59: Make the `TemplateCard` conform to what material-ui recommends in their examples. This fixes the extra padding around the buttons.
+- Updated dependencies [fd3f2a8c0]
+- Updated dependencies [d34d26125]
+- Updated dependencies [0af242b6d]
+- Updated dependencies [f4c2bcf54]
+- Updated dependencies [10a0124e0]
+- Updated dependencies [07e226872]
+- Updated dependencies [f62e7abe5]
+- Updated dependencies [96f378d10]
+- Updated dependencies [688b73110]
+  - @backstage/core@0.6.2
+  - @backstage/plugin-catalog-react@0.0.4
+
+## 0.5.0
+
+### Minor Changes
+
+- 6ed2b47d6: Include Backstage identity token in requests to backend plugins.
+
+### Patch Changes
+
+- Updated dependencies [19d354c78]
+- Updated dependencies [b51ee6ece]
+  - @backstage/plugin-catalog-react@0.0.3
+  - @backstage/core@0.6.1
+
 ## 0.4.2
 
 ### Patch Changes

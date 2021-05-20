@@ -17,7 +17,7 @@
 import React from 'react';
 import { renderInTestApp } from '@backstage/test-utils';
 import { ActionItemCard } from './ActionItemCard';
-import { MockScrollProvider } from '../../utils/tests';
+import { MockScrollProvider } from '../../testUtils';
 import { ProjectGrowthAlert } from '../../alerts';
 import { ProjectGrowthData } from '../../types';
 
@@ -42,5 +42,23 @@ describe('<ActionItemCard/>', () => {
     expect(rendered.getByText('1')).toBeInTheDocument();
     expect(rendered.getByText(alert.title)).toBeInTheDocument();
     expect(rendered.getByText(alert.subtitle)).toBeInTheDocument();
+  });
+
+  it('renders custom title elements', async () => {
+    const rendered = await renderInTestApp(
+      <MockScrollProvider>
+        <ActionItemCard
+          alert={{
+            ...alert,
+            title: <span>Foo</span>,
+            subtitle: <span>Bar</span>,
+          }}
+          avatar={<div>1</div>}
+        />
+      </MockScrollProvider>,
+    );
+
+    expect(rendered.getByText('Foo')).toBeInTheDocument();
+    expect(rendered.getByText('Bar')).toBeInTheDocument();
   });
 });

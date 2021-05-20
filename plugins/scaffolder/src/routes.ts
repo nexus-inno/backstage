@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createRouteRef } from '@backstage/core';
+import { createExternalRouteRef, createRouteRef } from '@backstage/core';
 
-export const rootRoute = createRouteRef({
-  path: '/create',
-  title: 'Create new entity',
+export const registerComponentRouteRef = createExternalRouteRef({
+  id: 'register-component',
+  optional: true,
 });
 
-export const templateRoute = createRouteRef({
-  path: '/create/:templateName',
-  title: 'Entity creation',
+export const rootRouteRef = createRouteRef({
+  title: 'Create new entity',
 });

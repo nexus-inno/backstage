@@ -20,11 +20,13 @@ import LinkIcon from '@material-ui/icons/Link';
 import { Link as RouterLink } from '../Link';
 
 export type IconLinkVerticalProps = {
-  icon?: React.ReactNode;
-  href?: string;
+  color?: 'primary' | 'secondary';
   disabled?: boolean;
+  href?: string;
+  icon?: React.ReactNode;
   label: string;
-  action?: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+  title?: string;
 };
 
 const useIconStyles = makeStyles(theme => ({
@@ -36,6 +38,13 @@ const useIconStyles = makeStyles(theme => ({
   },
   disabled: {
     color: 'gray',
+    cursor: 'default',
+  },
+  primary: {
+    color: theme.palette.primary.main,
+  },
+  secondary: {
+    color: theme.palette.secondary.main,
   },
   label: {
     fontSize: '0.7rem',
@@ -43,46 +52,42 @@ const useIconStyles = makeStyles(theme => ({
     fontWeight: 600,
     letterSpacing: 1.2,
   },
-  linkStyle: {
-    color: theme.palette.secondary.main,
-  },
 }));
 
 export function IconLinkVertical({
-  icon = <LinkIcon />,
-  href = '#',
+  color = 'primary',
   disabled = false,
-  action,
-  ...props
+  href = '#',
+  icon = <LinkIcon />,
+  label,
+  onClick,
+  title,
 }: IconLinkVerticalProps) {
   const classes = useIconStyles();
 
   if (disabled) {
     return (
       <Link
+        title={title}
         className={classnames(classes.link, classes.disabled)}
         underline="none"
-        {...props}
       >
         {icon}
-        <span className={classes.label}>{props.label}</span>
-      </Link>
-    );
-  }
-
-  if (action) {
-    return (
-      <Link className={classnames(classes.link, classes.linkStyle)} {...props}>
-        {icon}
-        {action}
+        <span className={classes.label}>{label}</span>
       </Link>
     );
   }
 
   return (
-    <Link className={classes.link} to={href} component={RouterLink} {...props}>
+    <Link
+      title={title}
+      className={classnames(classes.link, classes[color])}
+      to={href}
+      component={RouterLink}
+      onClick={onClick}
+    >
       {icon}
-      <span className={classes.label}>{props.label}</span>
+      <span className={classes.label}>{label}</span>
     </Link>
   );
 }

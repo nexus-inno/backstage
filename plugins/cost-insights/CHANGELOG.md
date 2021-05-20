@@ -1,5 +1,106 @@
 # @backstage/plugin-cost-insights
 
+## 0.10.0
+
+### Minor Changes
+
+- 7cbfcae48: support jsx in alert titles
+
+### Patch Changes
+
+- 5914a76d5: Added example client
+- Updated dependencies [65e6c4541]
+- Updated dependencies [5da6a561d]
+  - @backstage/core@0.7.10
+
+## 0.9.1
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+
+## 0.9.0
+
+### Minor Changes
+
+- 6f1b82b14: make change ratio optional
+
+### Patch Changes
+
+- Updated dependencies [f65adcde7]
+- Updated dependencies [80888659b]
+- Updated dependencies [7b8272fb7]
+- Updated dependencies [d8b81fd28]
+  - @backstage/core@0.7.8
+  - @backstage/theme@0.2.7
+  - @backstage/config@0.1.5
+
+## 0.8.5
+
+### Patch Changes
+
+- b98de52ae: Support a `name` prop for Projects for display purposes
+- c614ede9a: Updated README to have up-to-date install instructions.
+- Updated dependencies [9afcac5af]
+- Updated dependencies [e0c9ed759]
+- Updated dependencies [6eaecbd81]
+  - @backstage/core@0.7.7
+
+## 0.8.4
+
+### Patch Changes
+
+- d10ea17c9: fix missing type exports of public components
+- Updated dependencies [fcc3ada24]
+- Updated dependencies [4618774ff]
+- Updated dependencies [df59930b3]
+  - @backstage/core@0.7.3
+  - @backstage/theme@0.2.5
+
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [4c049a1a1]
+  - @backstage/core@0.7.0
+
+## 0.8.2
+
+### Patch Changes
+
+- 38205492a: Default alert properties can be overridden using accessors
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [a1f5e6545]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core@0.6.3
+  - @backstage/config@0.1.3
+
+## 0.8.1
+
+### Patch Changes
+
+- b33fa4cf4: fixes a bug in default dismiss form where other text input persists between reason selections
+- d36660721: Fix snooze quarter option
+- 02d6803e8: Migrated to new composability API, exporting the plugin instance as `costInsightsPlugin`, the root `'/cost-insights'` page as `CostInsightsPage`, the `'/cost-insights/investigating-growth'` page as `CostInsightsProjectGrowthInstructionsPage`, and the `'/cost-insights/labeling-jobs'` page as `CostInsightsLabelDataflowInstructionsPage`.
+- Updated dependencies [b51ee6ece]
+  - @backstage/core@0.6.1
+
 ## 0.8.0
 
 ### Minor Changes

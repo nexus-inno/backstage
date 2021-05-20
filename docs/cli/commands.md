@@ -24,7 +24,6 @@ Below is a cleaned up output of `yarn backstage-cli --help`.
 
 ```text
 app:build                Build an app for a production release
-app:diff                 Diff an existing app with the creation template
 app:serve                Serve an app for local development
 
 backend:build            Build a backend plugin
@@ -45,14 +44,18 @@ clean                    Delete cache directories
 create-plugin            Creates a new plugin in the current repository
 remove-plugin            Removes plugin in the current repository
 
+config:docs              Browse the configuration reference documentation
 config:print             Print the app configuration for the current package
 config:check             Validate that the given configuration loads and matches schema
+config:schema            Dump the app configuration schema
 
 versions:bump            Bump Backstage packages to the latest versions
 versions:check           Check Backstage package versioning
 
 prepack                  Prepares a package for packaging before publishing
 postpack                 Restores the changes made by the prepack command
+
+create-github-app        Create new GitHub App in your organization (experimental)
 
 help [command]           display help for command
 ```
@@ -108,27 +111,9 @@ Usage: backstage-cli app:build
 
 Options:
   --stats          Write bundle stats to output directory
+  --lax            Do not require environment variables to be set
   --config &lt;path&gt;  Config files to load instead of app-config.yaml (default: [])
   -h, --help       display help for command
-```
-
-## app:diff
-
-Scope: `app`
-
-Diff an existing app with the template used in `@backstage/create-app`. This
-will verify that your app package has not diverged from the template, and can be
-useful to run after updating the version of `@backstage/cli` in your app.
-
-This command is experimental and may be removed in the future.
-
-```text
-Usage: backstage-cli app:diff
-
-Options:
-  --check     Fail if changes are required
-  --yes       Apply all changes
-  -h, --help  display help for command
 ```
 
 ## app:serve
@@ -206,15 +191,18 @@ The following is an example of a `Dockerfile` that can be used to package the
 output of `backstage-cli backend:bundle` into an image:
 
 ```Dockerfile
-FROM node:14-buster
+FROM node:14-buster-slim
 WORKDIR /app
 
-ADD yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
-RUN yarn install --production --network-timeout 600000 && rm -rf "$(yarn cache dir)"
+COPY yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
+RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
 
-ADD packages/backend/dist/bundle.tar.gz app-config.yaml ./
+RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
 
-CMD node packages/backend
+COPY packages/backend/dist/bundle.tar.gz app-config.yaml ./
+RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
+
+CMD ["node", "packages/backend"]
 ```
 
 ```text
@@ -461,6 +449,25 @@ Options:
   --backstage-cli-help    display help for command
 ```
 
+## config:docs
+
+Scope: `root`
+
+This commands opens up the reference documentation of your apps local
+configuration schema in the browser. This is useful to get an overview of what
+configuration values are available to use, a description of what they do and
+their format, and where they get sent.
+
+```text
+Usage: backstage-cli config:docs [options]
+
+Browse the configuration reference documentation
+
+Options:
+  --package <name>  Only include the schema that applies to the given package
+  -h, --help        display help for command
+```
+
 ## config:print
 
 Scope: `root`
@@ -480,6 +487,7 @@ Usage: backstage-cli config:print [options]
 
 Options:
   --package &lt;name&gt;   Only load config schema that applies to the given package
+  --lax              Do not require environment variables to be set
   --frontend         Print only the frontend configuration
   --with-secrets     Include secrets in the printed configuration
   --format &lt;format&gt;  Format to print the configuration in, either json or yaml [yaml]
@@ -500,8 +508,30 @@ Usage: backstage-cli config:check [options]
 
 Options:
   --package &lt;name&gt;  Only load config schema that applies to the given package
+  --lax                   Do not require environment variables to be set
   --config &lt;path&gt;   Config files to load instead of app-config.yaml (default: [])
   -h, --help        display help for command
+```
+
+## config:schema
+
+Scope: `root`
+
+Dump the configuration schema that was collected from all local packages in the
+repo.
+
+Note: when run by `yarn`, supply the yarn option `--silent` if you are using the
+output in a command line pipe to avoid non schema output in the pipeline.
+
+```text
+Usage: backstage-cli config:schema [options]
+
+Print configuration schema
+
+Options:
+  --package &lt;name&gt;   Only output config schema that applies to the given package
+  --format &lt;format&gt;  Format to print the schema in, either json or yaml [yaml]
+  -h, --help         display help for command
 ```
 
 ## versions:bump
@@ -603,4 +633,19 @@ the resulting archive in the target `workspace-dir`.
 
 ```text
 Usage: backstage-cli build-workspace [options] &lt;workspace-dir&gt;
+```
+
+## create-github-app
+
+Scope: `root`
+
+Creates a GitHub App in your GitHub organization. This is an alternative to
+token-based [GitHub integration](../integrations/github/locations.md). See
+[GitHub Apps for Backstage Authentication](../plugins/github-apps.md).
+
+Launches a browser to create the App through GitHub and saves the result as a
+YAML file that can be referenced in the GitHub integration configuration.
+
+```text
+Usage: backstage-cli create-github-app &lt;github-org&gt;
 ```

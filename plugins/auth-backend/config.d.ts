@@ -36,13 +36,13 @@ export interface Config {
      */
     providers?: {
       google?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       github?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       gitlab?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       saml?: {
         entryPoint: string;
@@ -55,22 +55,28 @@ export interface Config {
         digestAlgorithm?: string;
       };
       okta?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       oauth2?: {
-        development: { [key: string]: string };
+        [authEnv: string]: {
+          clientId: string;
+          clientSecret: string;
+          authorizationUrl: string;
+          tokenUrl: string;
+          scope?: string;
+        };
       };
       oidc?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       auth0?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       microsoft?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       onelogin?: {
-        development: { [key: string]: string };
+        [authEnv: string]: { [key: string]: string };
       };
       awsalb?: {
         issuer?: string;

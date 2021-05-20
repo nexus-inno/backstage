@@ -18,6 +18,7 @@ import { Entity } from '@backstage/catalog-model';
 import {
   EmptyState,
   InfoCard,
+  InfoCardVariants,
   MissingAnnotationEmptyState,
   Progress,
   useApi,
@@ -88,7 +89,7 @@ export const SonarQubeCard = ({
   duplicationRatings = defaultDuplicationRatings,
 }: {
   entity?: Entity;
-  variant?: string;
+  variant?: InfoCardVariants;
   duplicationRatings?: DuplicationRating[];
 }) => {
   const { entity } = useEntity();
@@ -231,7 +232,15 @@ export const SonarQubeCard = ({
                 link={value.getComponentMeasuresUrl('COVERAGE')}
                 title="Coverage"
                 leftSlot={<Percentage value={value.metrics.coverage} />}
-                rightSlot={<Value value={`${value.metrics.coverage}%`} />}
+                rightSlot={
+                  <Value
+                    value={
+                      value.metrics.coverage !== undefined
+                        ? `${value.metrics.coverage}%`
+                        : '—'
+                    }
+                  />
+                }
               />
               <RatingCard
                 title="Duplications"

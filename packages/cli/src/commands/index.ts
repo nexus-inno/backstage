@@ -29,6 +29,7 @@ export function registerCommands(program: CommanderStatic) {
     .command('app:build')
     .description('Build an app for a production release')
     .option('--stats', 'Write bundle stats to output directory')
+    .option('--lax', 'Do not require environment variables to be set')
     .option(...configOption)
     .action(lazy(() => import('./app/build').then(m => m.default)));
 
@@ -75,13 +76,6 @@ export function registerCommands(program: CommanderStatic) {
     // We don't actually use the config in the CLI, just pass them on to the NodeJS process
     .option(...configOption)
     .action(lazy(() => import('./backend/dev').then(m => m.default)));
-
-  program
-    .command('app:diff')
-    .option('--check', 'Fail if changes are required')
-    .option('--yes', 'Apply all changes')
-    .description('Diff an existing app with the creation template')
-    .action(lazy(() => import('./app/diff').then(m => m.default)));
 
   program
     .command('create-plugin')
@@ -148,6 +142,15 @@ export function registerCommands(program: CommanderStatic) {
     .action(lazy(() => import('./testCommand').then(m => m.default)));
 
   program
+    .command('config:docs')
+    .option(
+      '--package <name>',
+      'Only include the schema that applies to the given package',
+    )
+    .description('Browse the configuration reference documentation')
+    .action(lazy(() => import('./config/docs').then(m => m.default)));
+
+  program
     .command('config:print')
     .option(
       '--package <name>',
@@ -176,6 +179,19 @@ export function registerCommands(program: CommanderStatic) {
       'Validate that the given configuration loads and matches schema',
     )
     .action(lazy(() => import('./config/validate').then(m => m.default)));
+
+  program
+    .command('config:schema')
+    .option(
+      '--package <name>',
+      'Only output config schema that applies to the given package',
+    )
+    .option(
+      '--format <format>',
+      'Format to print the schema in, either json or yaml [yaml]',
+    )
+    .description('Print configuration schema')
+    .action(lazy(() => import('./config/schema').then(m => m.default)));
 
   program
     .command('versions:bump')

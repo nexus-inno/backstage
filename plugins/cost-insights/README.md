@@ -11,9 +11,13 @@ At Spotify, we find that cloud costs are optimized organically when:
 
 Cost Insights shows trends over time, at the granularity of Backstage catalog entities - rather than the cloud provider's concepts. It can be used to troubleshoot cost anomalies, and promote cost-saving infrastructure migrations.
 
+Learn more with the Backstage blog post [New Cost Insights plugin: The engineer's solution to taming cloud costs](https://backstage.io/blog/2020/10/22/cost-insights-plugin).
+
 ## Install
 
 ```bash
+# From your Backstage root directory
+cd packages/app
 yarn add @backstage/plugin-cost-insights
 ```
 
@@ -21,7 +25,7 @@ yarn add @backstage/plugin-cost-insights
 
 1. Configure `app-config.yaml`. See [Configuration](#configuration).
 
-2. Create a CostInsights client. Clients must implement the CostInsightsApi interface. See the [API file](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/src/api/CostInsightsApi.ts) for required methods and documentation.
+2. Create a CostInsights client. Clients must implement the [CostInsightsApi](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/src/api/CostInsightsApi.ts) interface. Create your own or [use a template](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/src/example/templates/CostInsightsClient.ts) to get started.
 
 ```ts
 // path/to/CostInsightsClient.ts
@@ -30,7 +34,9 @@ import { CostInsightsApi } from '@backstage/plugin-cost-insights';
 export class CostInsightsClient implements CostInsightsApi { ... }
 ```
 
-3. Import the client and the CostInsights plugin API to your Backstage instance.
+**Note:** We've briefly explored using the AWS Cost Explorer API to implement a Cost Insights client. Learn more about our findings [here](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/contrib/aws-cost-explorer-api.md).
+
+3. Import the client and the Cost Insights plugin API to your Backstage instance.
 
 ```ts
 // packages/app/src/api.ts
@@ -47,11 +53,49 @@ export const apis = [
 ];
 ```
 
-4. Add cost-insights to your Backstage plugins.
+4. Add the `CostInsightsPage` extension to your `App.tsx`:
 
-```ts
-// packages/app/src/plugins.ts
-export { plugin as CostInsights } from '@backstage/plugin-cost-insights';
+```tsx
+// packages/app/src/App.tsx
+import { CostInsightsPage } from '@backstage/plugin-cost-insights';
+
+<FlatRoutes>
+  ...
+  <Route path="/cost-insights" element={<CostInsightsPage />} />
+  ...
+</FlatRoutes>;
+```
+
+5. Add Cost Insights to your app Sidebar.
+
+To expose the plugin to your users, you can integrate the `cost-insights` route anyway that suits your application, but most commonly it is added to the Sidebar.
+
+```diff
+// packages/app/src/sidebar.tsx
++ import MoneyIcon from '@material-ui/icons/MonetizationOn';
+
+ ...
+
+ export const AppSidebar = () => (
+   <Sidebar>
+     <SidebarLogo />
+     <SidebarSearch />
+     <SidebarDivider />
+     {/* Global nav, not org-specific */}
+     <SidebarItem icon={HomeIcon} to="./" text="Home" />
+     <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+     <SidebarItem icon={LibraryBooks} to="/docs" text="Docs" />
+     <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+     <SidebarDivider />
+     <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
++    <SidebarItem icon={MoneyIcon} to="cost-insights" text="Cost Insights" />
+     {/* End global nav */}
+     <SidebarDivider />
+     <SidebarSpace />
+     <SidebarDivider />
+     <SidebarSettings />
+   </Sidebar>
+ );
 ```
 
 ## Configuration
@@ -108,6 +152,6 @@ costInsights:
 
 The CostInsightsApi `getAlerts` method may return any type of alert or recommendation (called collectively "Action Items" in Cost Insights) that implements the [Alert type](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/src/types/Alert.ts). This allows you to deliver any alerts or recommendations specific to your infrastructure or company migrations.
 
-The Alert type includes an `element` field to supply the JSX Element that will be rendered in the Cost Insights "Action Items" section; we recommend using Backstage's [InfoCard](https://backstage.io/storybook/?path=/story/layout-information-card--default) and [Recharts](http://recharts.org/en-US/) to show actionable visualizations.
+To learn more about using Cost Insights' ready-to-use alerts, see the alerts [README](https://github.com/backstage/backstage/blob/master/plugins/cost-insights/src/alerts/README.md).
 
-The Alert `url` should link to documentation or instructions for resolving the alert. This may be omitted if no external link is needed.
+Example implementations of custom alerts, forms and components can be found in the [examples](https://github.com/backstage/backstage/tree/master/plugins/cost-insights/src/example) directory.

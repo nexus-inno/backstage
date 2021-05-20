@@ -1,5 +1,218 @@
 # @backstage/plugin-auth-backend
 
+## 0.3.11
+
+### Patch Changes
+
+- 65e6c4541: Remove circular dependencies
+- Updated dependencies [f7f7783a3]
+- Updated dependencies [c7dad9218]
+- Updated dependencies [65e6c4541]
+- Updated dependencies [68fdbf014]
+- Updated dependencies [5001de908]
+- Updated dependencies [61c3f927c]
+  - @backstage/catalog-model@0.7.10
+  - @backstage/backend-common@0.8.1
+  - @backstage/test-utils@0.1.12
+
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [062bbf90f]
+- Updated dependencies [22fd8ce2a]
+- Updated dependencies [10c008a3a]
+- Updated dependencies [f9fb4a205]
+- Updated dependencies [16be1d093]
+  - @backstage/test-utils@0.1.11
+  - @backstage/backend-common@0.8.0
+  - @backstage/catalog-model@0.7.9
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [e0bfd3d44]
+- Updated dependencies [38ca05168]
+- Updated dependencies [d8b81fd28]
+- Updated dependencies [d1b1306d9]
+  - @backstage/backend-common@0.7.0
+  - @backstage/catalog-model@0.7.8
+  - @backstage/config@0.1.5
+  - @backstage/catalog-client@0.3.11
+
+## 0.3.8
+
+### Patch Changes
+
+- 2b2b31186: When using OAuth2 authentication the name is now taken from the name property of the JWT instead of the email property
+- Updated dependencies [97b60de98]
+- Updated dependencies [ae6250ce3]
+- Updated dependencies [98dd5da71]
+- Updated dependencies [b779b5fee]
+  - @backstage/catalog-model@0.7.6
+  - @backstage/test-utils@0.1.10
+  - @backstage/backend-common@0.6.2
+
+## 0.3.7
+
+### Patch Changes
+
+- 0d55dcc74: Fixes timezone bug for auth signing keys
+- 676ede643: Added the `getOriginLocationByEntity` and `removeLocationById` methods to the catalog client
+- Updated dependencies [676ede643]
+- Updated dependencies [b196a4569]
+- Updated dependencies [8488a1a96]
+- Updated dependencies [37e3a69f5]
+  - @backstage/catalog-client@0.3.9
+  - @backstage/catalog-model@0.7.5
+  - @backstage/backend-common@0.6.1
+
+## 0.3.6
+
+### Patch Changes
+
+- 449776cd6: The `auth` config types now properly accept any declared auth environment. Previously only `development` was accepted.
+
+  The `audience` configuration is no longer required for GitLab auth; this will default to `https://gitlab.com`
+
+## 0.3.5
+
+### Patch Changes
+
+- 8686eb38c: Use errors from `@backstage/errors`
+- 8b5e59750: expose verifyNonce and readState publicly from auth-backend
+- Updated dependencies [8686eb38c]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [0434853a5]
+- Updated dependencies [4e0b5055a]
+- Updated dependencies [8686eb38c]
+  - @backstage/catalog-client@0.3.8
+  - @backstage/backend-common@0.6.0
+  - @backstage/config@0.1.4
+  - @backstage/test-utils@0.1.9
+
+## 0.3.4
+
+### Patch Changes
+
+- 761698831: Bump to the latest version of the Knex library.
+- 5f1b7ea35: Change the JWKS url value for the oidc configuration endpoint
+- Updated dependencies [d7245b733]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [761698831]
+  - @backstage/backend-common@0.5.6
+  - @backstage/catalog-model@0.7.4
+  - @backstage/catalog-client@0.3.7
+
+## 0.3.3
+
+### Patch Changes
+
+- f43192207: remove usage of res.send() for res.json() and res.end() to ensure content types are more consistently application/json on backend responses and error cases
+- 3af994c81: Expose a configuration option for the oidc scope
+- Updated dependencies [12d8f27a6]
+- Updated dependencies [497859088]
+- Updated dependencies [8adb48df4]
+  - @backstage/catalog-model@0.7.3
+  - @backstage/backend-common@0.5.5
+
+## 0.3.2
+
+### Patch Changes
+
+- ec504e7b4: Fix for refresh token being lost during Microsoft login.
+- Updated dependencies [bad21a085]
+- Updated dependencies [a1f5e6545]
+  - @backstage/catalog-model@0.7.2
+  - @backstage/config@0.1.3
+
+## 0.3.1
+
+### Patch Changes
+
+- 92f01d75c: Refactored auth provider factories to accept options along with other internal refactoring of the auth providers.
+- d9687c524: Fixed parsing of OIDC key timestamps when using SQLite.
+- 3600ac3b0: Migrated the package from using moment to Luxon. #4278
+- Updated dependencies [16fb1d03a]
+- Updated dependencies [491f3a0ec]
+- Updated dependencies [434b4e81a]
+- Updated dependencies [fb28da212]
+  - @backstage/backend-common@0.5.4
+
+## 0.3.0
+
+### Minor Changes
+
+- 1deb31141: Remove undocumented scope (default) from the OIDC auth provider which was breaking some identity services. If your app relied on this scope, you can manually specify it by adding a new factory in `packages/app/src/apis.ts`:
+
+  ```
+  export const apis = [
+    createApiFactory({
+      api: oidcAuthApiRef,
+      deps: {
+        discoveryApi: discoveryApiRef,
+        oauthRequestApi: oauthRequestApiRef,
+        configApi: configApiRef,
+      },
+      factory: ({ discoveryApi, oauthRequestApi, configApi }) =>
+        OAuth2.create({
+          discoveryApi,
+          oauthRequestApi,
+          provider: {
+            id: 'oidc',
+            title: 'Your Identity Provider',
+            icon: OAuth2Icon,
+          },
+          defaultScopes: [
+            'default',
+            'openid',
+            'email',
+            'offline_access',
+          ],
+          environment: configApi.getOptionalString('auth.environment'),
+        }),
+    }),
+  ];
+  ```
+
+### Patch Changes
+
+- 6ed2b47d6: Include Backstage identity token in requests to backend plugins.
+- 07bafa248: Add configurable `scope` for oauth2 auth provider.
+
+  Some OAuth2 providers require certain scopes to facilitate a user sign-in using the Authorization Code flow.
+  This change adds the optional `scope` key to auth.providers.oauth2. An example is:
+
+  ```yaml
+  auth:
+    providers:
+      oauth2:
+        development:
+          clientId:
+            $env: DEV_OAUTH2_CLIENT_ID
+          clientSecret:
+            $env: DEV_OAUTH2_CLIENT_SECRET
+          authorizationUrl:
+            $env: DEV_OAUTH2_AUTH_URL
+          tokenUrl:
+            $env: DEV_OAUTH2_TOKEN_URL
+          scope: saml-login-selector openid profile email
+  ```
+
+  This tells the OAuth 2.0 AS to perform a SAML login and return OIDC information include the `profile`
+  and `email` claims as part of the ID Token.
+
+- Updated dependencies [6ed2b47d6]
+- Updated dependencies [ffffea8e6]
+- Updated dependencies [82b2c11b6]
+- Updated dependencies [965e200c6]
+- Updated dependencies [72b96e880]
+- Updated dependencies [5a5163519]
+  - @backstage/catalog-client@0.3.6
+  - @backstage/backend-common@0.5.3
+
 ## 0.2.12
 
 ### Patch Changes

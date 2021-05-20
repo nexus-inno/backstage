@@ -32,30 +32,13 @@ import {
   configApiRef,
   useApi,
 } from '@backstage/core';
-import { useWorkflowRuns } from '../useWorkflowRuns';
+import { useWorkflowRuns, WorkflowRun } from '../useWorkflowRuns';
 import { WorkflowRunStatus } from '../WorkflowRunStatus';
 import SyncIcon from '@material-ui/icons/Sync';
-import { buildRouteRef } from '../../plugin';
+import { buildRouteRef } from '../../routes';
 import { useProjectName } from '../useProjectName';
 import { Entity } from '@backstage/catalog-model';
 import { readGitHubIntegrationConfigs } from '@backstage/integration';
-
-export type WorkflowRun = {
-  id: string;
-  message: string;
-  url?: string;
-  githubUrl?: string;
-  source: {
-    branchName: string;
-    commit: {
-      hash: string;
-      url: string;
-    };
-  };
-  status: string;
-  conclusion: string;
-  onReRunClick: () => void;
-};
 
 const generatedColumns: TableColumn[] = [
   {
@@ -85,6 +68,10 @@ const generatedColumns: TableColumn[] = [
         <p>{row.source?.commit.hash}</p>
       </Typography>
     ),
+  },
+  {
+    title: 'Workflow',
+    field: 'workflowName',
   },
   {
     title: 'Status',
@@ -186,6 +173,8 @@ export const WorkflowRunsTable = ({
     branch,
   });
 
+  const githubHost = hostname || 'github.com';
+
   return !runs ? (
     <EmptyState
       missing="data"
@@ -195,7 +184,7 @@ export const WorkflowRunsTable = ({
         <Button
           variant="contained"
           color="primary"
-          href={`https://github.com/${projectName}/actions/new`}
+          href={`https://${githubHost}/${projectName}/actions/new`}
         >
           Create new Workflow
         </Button>

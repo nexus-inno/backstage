@@ -14,30 +14,28 @@
  * limitations under the License.
  */
 
+import { Config } from '@backstage/config';
 import express from 'express';
 import Router from 'express-promise-router';
 import { Logger } from 'winston';
-import { Config } from '@backstage/config';
-import { MultiTenantServiceLocator } from '../service-locator/MultiTenantServiceLocator';
-import { KubernetesClientBasedFetcher } from './KubernetesFetcher';
-import { KubernetesClientProvider } from './KubernetesClientProvider';
-import {
-  GetKubernetesObjectsForServiceHandler,
-  handleGetKubernetesObjectsForService,
-} from './getKubernetesObjectsForServiceHandler';
-import {
-  KubernetesRequestBody,
-  KubernetesServiceLocator,
-  KubernetesFetcher,
-  ServiceLocatorMethod,
-  ClusterLocatorMethod,
-  ClusterDetails,
-} from '..';
 import { getCombinedClusterDetails } from '../cluster-locator';
+import { MultiTenantServiceLocator } from '../service-locator/MultiTenantServiceLocator';
+import {
+  ClusterDetails,
+  KubernetesClustersSupplier,
+  KubernetesServiceLocator,
+  ServiceLocatorMethod,
+  CustomResource,
+} from '../types/types';
+import { KubernetesRequestBody } from '@backstage/plugin-kubernetes-common';
+import { KubernetesClientProvider } from './KubernetesClientProvider';
+import { KubernetesFanOutHandler } from './KubernetesFanOutHandler';
+import { KubernetesClientBasedFetcher } from './KubernetesFetcher';
 
 export interface RouterOptions {
   logger: Logger;
   config: Config;
+  clusterSupplier?: KubernetesClustersSupplier;
 }
 
 const getServiceLocator = (
@@ -45,7 +43,7 @@ const getServiceLocator = (
   clusterDetails: ClusterDetails[],
 ): KubernetesServiceLocator => {
   const serviceLocatorMethod = config.getString(
-    'kubernetes.serviceLocatorMethod',
+    'kubernetes.serviceLocatorMethod.type',
   ) as ServiceLocatorMethod;
 
   switch (serviceLocatorMethod) {
@@ -62,9 +60,8 @@ const getServiceLocator = (
 
 export const makeRouter = (
   logger: Logger,
-  fetcher: KubernetesFetcher,
-  serviceLocator: KubernetesServiceLocator,
-  handleGetByEntity: GetKubernetesObjectsForServiceHandler,
+  kubernetesFanOutHandler: KubernetesFanOutHandler,
+  clusterDetails: ClusterDetails[],
 ): express.Router => {
   const router = Router();
   router.use(express.json());
@@ -73,22 +70,26 @@ export const makeRouter = (
     const serviceId = req.params.serviceId;
     const requestBody: KubernetesRequestBody = req.body;
     try {
-      const response = await handleGetByEntity(
-        serviceId,
-        fetcher,
-        serviceLocator,
-        logger,
+      const response = await kubernetesFanOutHandler.getKubernetesObjectsByEntity(
         requestBody,
       );
-      res.send(response);
+      res.json(response);
     } catch (e) {
       logger.error(
         `action=retrieveObjectsByServiceId service=${serviceId}, error=${e}`,
       );
-      res.status(500).send({ error: e.message });
+      res.status(500).json({ error: e.message });
     }
   });
 
+  router.get('/clusters', async (_, res) => {
+    res.json({
+      items: clusterDetails.map(cd => ({
+        name: cd.name,
+        authProvider: cd.authProvider,
+      })),
+    });
+  });
   return router;
 };
 
@@ -99,26 +100,46 @@ export async function createRouter(
 
   logger.info('Initializing Kubernetes backend');
 
+  const customResources: CustomResource[] = (
+    options.config.getOptionalConfigArray('kubernetes.customResources') ?? []
+  ).map(
+    c =>
+      ({
+        group: c.getString('group'),
+        apiVersion: c.getString('apiVersion'),
+        plural: c.getString('plural'),
+      } as CustomResource),
+  );
+
+  logger.info(
+    `action=LoadingCustomResources numOfCustomResources=${customResources.length}`,
+  );
+
   const fetcher = new KubernetesClientBasedFetcher({
     kubernetesClientProvider: new KubernetesClientProvider(),
     logger,
   });
 
-  const clusterLocatorMethods = options.config.getStringArray(
-    'kubernetes.clusterLocatorMethods',
-  ) as ClusterLocatorMethod[];
+  let clusterDetails: ClusterDetails[];
 
-  const clusterDetails = await getCombinedClusterDetails(
-    clusterLocatorMethods,
-    options.config,
+  if (options.clusterSupplier) {
+    clusterDetails = await options.clusterSupplier.getClusters();
+  } else {
+    clusterDetails = await getCombinedClusterDetails(options.config);
+  }
+
+  logger.info(
+    `action=loadClusterDetails numOfClustersLoaded=${clusterDetails.length}`,
   );
 
   const serviceLocator = getServiceLocator(options.config, clusterDetails);
 
-  return makeRouter(
+  const kubernetesFanOutHandler = new KubernetesFanOutHandler(
     logger,
     fetcher,
     serviceLocator,
-    handleGetKubernetesObjectsForService,
+    customResources,
   );
+
+  return makeRouter(logger, kubernetesFanOutHandler, clusterDetails);
 }

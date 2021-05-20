@@ -1,5 +1,102 @@
 # @backstage/cli
 
+## 0.6.12
+
+### Patch Changes
+
+- 2bfec55a6: Update `fork-ts-checker-webpack-plugin`
+- Updated dependencies [290405276]
+  - @backstage/config-loader@0.6.2
+
+## 0.6.11
+
+### Patch Changes
+
+- 2cd70e164: Add context for versions:bump on what version it was bumped to. Updated tests for the same.
+- 3be844496: chore: bump `ts-node` versions to 9.1.1
+- e3fc89df6: update plugins created to use react-use 17.2.4
+
+## 0.6.10
+
+### Patch Changes
+
+- f65adcde7: Fix some transitive dependency warnings in yarn
+- fc79a6dd3: Added lax option to backstage-cli app:build command
+- d8b81fd28: Bump `json-schema` dependency from `0.2.5` to `0.3.0`.
+- Updated dependencies [d8b81fd28]
+  - @backstage/config-loader@0.6.1
+  - @backstage/config@0.1.5
+
+## 0.6.9
+
+### Patch Changes
+
+- 4e5c94249: Add `config:docs` command that opens up reference documentation for the local configuration schema in a browser.
+- 1373f4f12: No longer add newly created plugins to `plugins.ts` in the app, as it is no longer needed.
+- 479b29124: Added support for Datadog rum events
+
+## 0.6.8
+
+### Patch Changes
+
+- 60ce64aa2: Disable hot reloading in CI environments.
+
+## 0.6.7
+
+### Patch Changes
+
+- Updated dependencies [82c66b8cd]
+  - @backstage/config-loader@0.6.0
+
+## 0.6.6
+
+### Patch Changes
+
+- 598f5bcfb: Lock down the version of webpack-dev-server as it's causing some nasty bugs someplace
+- 4d248725e: Make the backend plugin template use the correct latest version of `express-promise-router`
+
+## 0.6.5
+
+### Patch Changes
+
+- 84972540b: Lint storybook files, i.e. `*.stories.*`, as if they were tests.
+- Updated dependencies [0434853a5]
+  - @backstage/config@0.1.4
+
+## 0.6.4
+
+### Patch Changes
+
+- 5ab5864f6: Add support for most TypeScript 4.1 syntax.
+
+## 0.6.3
+
+### Patch Changes
+
+- 507513fed: Bump `@svgr/webpack` from `5.4.x` to `5.5.x`.
+- e37d2de99: Bump `@testing-library/react` in the plugin template from `^10.4.1` to `^11.2.5`. To apply this to an existing plugin, update the dependency in your `package.json`.
+- 11c6208fe: Fixed an issue where the `backend:dev` command would get stuck executing the backend process multiple times, causing port conflict issues.
+- d4f0a1406: New config command to export the configuration schema. When running backstage-cli with yarn, consider using `yarn --silent backstage-cli config:schema` to get a clean output on `stdout`.
+- b93538acc: Fix for type declaration input being required for build even if types aren't being built.
+- 8871e7523: Bump `ts-loader` dependency range from `^7.0.4` to `^8.0.17`.
+
+## 0.6.2
+
+### Patch Changes
+
+- e780e119c: Add missing `file-loader` dependency which could cause issues with loading images and other assets.
+- 6266ddd11: The `yarn backstage-cli app:diff` has been broken since a couple of months. The command to perform updates `yarn backstage-cli versions:bump` prints change logs which seems to be a good replacement for this command.
+- Updated dependencies [a1f5e6545]
+  - @backstage/config@0.1.3
+
+## 0.6.1
+
+### Patch Changes
+
+- 257a753ff: Updated transform of `.esm.js` files to be able to handle dynamic imports.
+- 9337f509d: Tweak error message in lockfile parsing to include more information.
+- 532bc0ec0: Upgrading to lerna@4.0.0.
+
 ## 0.6.0
 
 ### Minor Changes

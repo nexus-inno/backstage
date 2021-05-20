@@ -1,5 +1,288 @@
 # @backstage/plugin-techdocs
 
+## 0.9.3
+
+### Patch Changes
+
+- 65e6c4541: Remove circular dependencies
+- a62cfe068: Bug fix on sidebar position when Tab-Bar is enabled
+- 35e091604: Handle URLs with a `#hash` correctly when rewriting link URLs.
+- Updated dependencies [f7f7783a3]
+- Updated dependencies [65e6c4541]
+- Updated dependencies [68fdbf014]
+- Updated dependencies [5da6a561d]
+  - @backstage/catalog-model@0.7.10
+  - @backstage/core@0.7.10
+  - @backstage/integration@0.5.3
+
+## 0.9.2
+
+### Patch Changes
+
+- 062bbf90f: chore: bump `@testing-library/user-event` from 12.8.3 to 13.1.8
+- 675a569a9: chore: bump `react-use` dependency in all packages
+- Updated dependencies [062bbf90f]
+- Updated dependencies [10c008a3a]
+- Updated dependencies [889d89b6e]
+- Updated dependencies [16be1d093]
+- Updated dependencies [3f988cb63]
+- Updated dependencies [675a569a9]
+  - @backstage/core@0.7.9
+  - @backstage/integration-react@0.1.2
+  - @backstage/plugin-catalog-react@0.1.6
+  - @backstage/catalog-model@0.7.9
+
+## 0.9.1
+
+### Patch Changes
+
+- 2e05277e0: Fix navigation in a page using the table of contents.
+- 4075c6367: Make git config optional for techdocs feedback links
+- Updated dependencies [38ca05168]
+- Updated dependencies [f65adcde7]
+- Updated dependencies [81c54d1f2]
+- Updated dependencies [80888659b]
+- Updated dependencies [7b8272fb7]
+- Updated dependencies [d8b81fd28]
+  - @backstage/integration@0.5.2
+  - @backstage/core@0.7.8
+  - @backstage/plugin-catalog-react@0.1.5
+  - @backstage/theme@0.2.7
+  - @backstage/catalog-model@0.7.8
+  - @backstage/config@0.1.5
+
+## 0.9.0
+
+### Minor Changes
+
+- 21fddf452: Make `techdocsStorageApiRef` and `techdocsApiRef` use interfaces instead of the
+  actual implementation classes.
+
+  This renames the classes `TechDocsApi` to `TechDocsClient` and `TechDocsStorageApi`
+  to `TechDocsStorageClient` and renames the interfaces `TechDocs` to `TechDocsApi`
+  and `TechDocsStorage` to `TechDocsStorageApi` to comply the pattern elsewhere in
+  the project. This also fixes the types returned by some methods on those
+  interfaces.
+
+### Patch Changes
+
+- 6fbd7beca: Use `EntityRefLink` in header and use relations to reference the owner of the
+  document.
+- 15cbe6815: Fix TechDocs landing page table wrong copied link
+- 39bdaa004: Add customization and exportable components for TechDocs landing page
+- cb8c848a3: Disable color transitions on links to avoid issues in dark mode.
+- 17915e29b: Rework state management to avoid rendering multiple while navigating between pages.
+- Updated dependencies [9afcac5af]
+- Updated dependencies [e0c9ed759]
+- Updated dependencies [6eaecbd81]
+  - @backstage/core@0.7.7
+
+## 0.8.0
+
+### Minor Changes
+
+- ac6025f63: Add feedback link icon in Techdocs Reader that directs to GitLab or GitHub repo issue page with pre-filled title and source link.
+  For link to appear, requires `repo_url` and `edit_uri` to be filled in mkdocs.yml, as per https://www.mkdocs.org/user-guide/configuration. An `edit_uri` will need to be specified for self-hosted GitLab/GitHub instances with a different host name.
+  To identify issue URL format as GitHub or GitLab, the host name of source in `repo_url` is checked if it contains `gitlab` or `github`. Alternately this is determined by matching to `host` values from `integrations` in app-config.yaml.
+
+### Patch Changes
+
+- e292e393f: Add a test id to the shadow root element of the Reader to access it easily in e2e tests
+- Updated dependencies [94da20976]
+- Updated dependencies [d8cc7e67a]
+- Updated dependencies [99fbef232]
+- Updated dependencies [ab07d77f6]
+- Updated dependencies [931b21a12]
+- Updated dependencies [937ed39ce]
+- Updated dependencies [9a9e7a42f]
+- Updated dependencies [50ce875a0]
+  - @backstage/core@0.7.6
+  - @backstage/theme@0.2.6
+
+## 0.7.2
+
+### Patch Changes
+
+- fef852ecd: Reworked the TechDocs plugin to support using the configured company name instead of
+  'Backstage' in the page title.
+- 18f7345a6: Add borders to TechDocs tables and increase font size. Fixes #5264 and #5276.
+- Updated dependencies [bb5055aee]
+- Updated dependencies [d0d1c2f7b]
+- Updated dependencies [5d0740563]
+- Updated dependencies [5cafcf452]
+- Updated dependencies [86a95ba67]
+- Updated dependencies [e27cb6c45]
+  - @backstage/catalog-model@0.7.7
+  - @backstage/core@0.7.5
+
+## 0.7.1
+
+### Patch Changes
+
+- bebd1c4fe: Remove the `@backstage/techdocs-common` dependency to not pull in backend config schemas in the frontend.
+- Updated dependencies [9f48b548c]
+- Updated dependencies [8488a1a96]
+  - @backstage/plugin-catalog-react@0.1.4
+  - @backstage/catalog-model@0.7.5
+
+## 0.7.0
+
+### Minor Changes
+
+- aaeb7ecf3: When newer documentation available but not built, show older documentation while async building newer
+  TechDocs backend: /sync endpoint added to support above, returns immediate success if docs don't need a build, returns delayed success after build if needed
+  TechDocs backend: /docs endpoint removed as frontend can directly request to techdocs.storageUrl or /static/docs
+- 3139f83af: Add sticky sidebars and footer navigation links to TechDocs Reader
+
+### Patch Changes
+
+- ea9d977e7: Introduce workaround for admonition icons of MkDocs.
+- 2aab54319: TechDocs: links at sidebar and bottom reset scroll position to top
+- Updated dependencies [01ccef4c7]
+- Updated dependencies [fcc3ada24]
+- Updated dependencies [4618774ff]
+- Updated dependencies [df59930b3]
+  - @backstage/plugin-catalog-react@0.1.3
+  - @backstage/core@0.7.3
+  - @backstage/theme@0.2.5
+
+## 0.6.2
+
+### Patch Changes
+
+- 83bfc98a3: On TechDocs page header, change the breadcrumbs link to be static and point to TechDocs homepage.
+- e7baa0d2e: Separate techdocs-backend and frontend config schema declarations
+- c8b54c370: Extended TechDocs HomePage with owned documents
+- Updated dependencies [0434853a5]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [9ca0e4009]
+- Updated dependencies [34ff49b0f]
+- Updated dependencies [8686eb38c]
+- Updated dependencies [424742dc1]
+- Updated dependencies [4e0b5055a]
+  - @backstage/config@0.1.4
+  - @backstage/core@0.7.2
+  - @backstage/plugin-catalog-react@0.1.2
+  - @backstage/techdocs-common@0.4.5
+  - @backstage/test-utils@0.1.9
+
+## 0.6.1
+
+### Patch Changes
+
+- aa095e469: OpenStack Swift publisher added for tech-docs.
+- 2089de76b: Make use of the new core `ItemCardGrid` and `ItemCardHeader` instead of the deprecated `ItemCard`.
+- 868e4cdf2: - Adds a link to the owner entity
+  - Corrects the link to the component which includes the namespace
+- ca4a904f6: Add an optional configuration option for setting the url endpoint for AWS S3 publisher: `techdocs.publisher.awsS3.endpoint`
+- Updated dependencies [d7245b733]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [0b42fff22]
+- Updated dependencies [2ef5bc7ea]
+- Updated dependencies [ff4d666ab]
+- Updated dependencies [aa095e469]
+- Updated dependencies [2089de76b]
+- Updated dependencies [dc1fc92c8]
+- Updated dependencies [bc46435f5]
+- Updated dependencies [a501128db]
+- Updated dependencies [ca4a904f6]
+  - @backstage/techdocs-common@0.4.4
+  - @backstage/catalog-model@0.7.4
+  - @backstage/core@0.7.1
+  - @backstage/theme@0.2.4
+
+## 0.6.0
+
+### Minor Changes
+
+- 813c6a4f2: Add authorization header on techdocs api requests. Breaking change as clients now needs the Identity API.
+
+### Patch Changes
+
+- Updated dependencies [12d8f27a6]
+- Updated dependencies [f43192207]
+- Updated dependencies [40c0fdbaa]
+- Updated dependencies [2a271d89e]
+- Updated dependencies [bece09057]
+- Updated dependencies [169f48deb]
+- Updated dependencies [8a1566719]
+- Updated dependencies [9d455f69a]
+- Updated dependencies [4c049a1a1]
+- Updated dependencies [02816ecd7]
+- Updated dependencies [61299519f]
+  - @backstage/catalog-model@0.7.3
+  - @backstage/techdocs-common@0.4.3
+  - @backstage/core@0.7.0
+  - @backstage/plugin-catalog-react@0.1.1
+
+## 0.5.8
+
+### Patch Changes
+
+- f37992797: Got rid of some `attr` and cleaned up a bit in the TechDocs config schema.
+- 2499f6cde: Add support for assuming role in AWS integrations
+- Updated dependencies [3a58084b6]
+- Updated dependencies [e799e74d4]
+- Updated dependencies [dc12852c9]
+- Updated dependencies [d0760ecdf]
+- Updated dependencies [1407b34c6]
+- Updated dependencies [88f1f1b60]
+- Updated dependencies [bad21a085]
+- Updated dependencies [9615e68fb]
+- Updated dependencies [49f9b7346]
+- Updated dependencies [5c2e2863f]
+- Updated dependencies [3a58084b6]
+- Updated dependencies [2499f6cde]
+- Updated dependencies [a1f5e6545]
+- Updated dependencies [1e4ddd71d]
+- Updated dependencies [2c1f2a7c2]
+  - @backstage/core@0.6.3
+  - @backstage/test-utils@0.1.8
+  - @backstage/plugin-catalog-react@0.1.0
+  - @backstage/catalog-model@0.7.2
+  - @backstage/techdocs-common@0.4.2
+  - @backstage/config@0.1.3
+
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [fd3f2a8c0]
+- Updated dependencies [fb28da212]
+- Updated dependencies [d34d26125]
+- Updated dependencies [0af242b6d]
+- Updated dependencies [f4c2bcf54]
+- Updated dependencies [10a0124e0]
+- Updated dependencies [07e226872]
+- Updated dependencies [26e143e60]
+- Updated dependencies [c6655413d]
+- Updated dependencies [44414239f]
+- Updated dependencies [b0a41c707]
+- Updated dependencies [f62e7abe5]
+- Updated dependencies [96f378d10]
+- Updated dependencies [688b73110]
+  - @backstage/core@0.6.2
+  - @backstage/techdocs-common@0.4.1
+  - @backstage/plugin-catalog-react@0.0.4
+
+## 0.5.6
+
+### Patch Changes
+
+- f5e564cd6: Improve display of error messages
+- 41af18227: Migrated to new composability API, exporting the plugin instance as `techdocsPlugin`, the top-level page as `TechdocsPage`, and the entity content as `EntityTechdocsContent`.
+- 8f3443427: Enhance API calls to support trapping 500 errors from techdocs-backend
+- Updated dependencies [77ad0003a]
+- Updated dependencies [b51ee6ece]
+- Updated dependencies [19d354c78]
+- Updated dependencies [08142b256]
+- Updated dependencies [08142b256]
+- Updated dependencies [b51ee6ece]
+  - @backstage/techdocs-common@0.4.0
+  - @backstage/test-utils@0.1.7
+  - @backstage/plugin-catalog-react@0.0.3
+  - @backstage/core@0.6.1
+
 ## 0.5.5
 
 ### Patch Changes

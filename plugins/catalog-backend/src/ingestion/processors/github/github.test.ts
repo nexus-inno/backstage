@@ -22,6 +22,7 @@ import {
   getOrganizationTeams,
   getOrganizationUsers,
   getTeamMembers,
+  getOrganizationRepositories,
   QueryResponse,
 } from './github';
 
@@ -149,6 +150,57 @@ describe('github', () => {
       );
 
       await expect(getTeamMembers(graphql, 'a', 'b')).resolves.toEqual(output);
+    });
+  });
+
+  describe('getOrganizationRepositories', () => {
+    it('read repositories', async () => {
+      const input: QueryResponse = {
+        repositoryOwner: {
+          repositories: {
+            nodes: [
+              {
+                name: 'backstage',
+                url: 'https://github.com/backstage/backstage',
+                isArchived: false,
+              },
+              {
+                name: 'demo',
+                url: 'https://github.com/backstage/demo',
+                isArchived: true,
+              },
+            ],
+            pageInfo: {
+              hasNextPage: false,
+            },
+          },
+        },
+      };
+
+      const output = {
+        repositories: [
+          {
+            name: 'backstage',
+            url: 'https://github.com/backstage/backstage',
+            isArchived: false,
+          },
+          {
+            name: 'demo',
+            url: 'https://github.com/backstage/demo',
+            isArchived: true,
+          },
+        ],
+      };
+
+      server.use(
+        graphqlMsw.query('repositories', (_req, res, ctx) =>
+          res(ctx.data(input)),
+        ),
+      );
+
+      await expect(getOrganizationRepositories(graphql, 'a')).resolves.toEqual(
+        output,
+      );
     });
   });
 });

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { parseLocationAnnotation, joinGitUrlPath } from './helpers';
 import {
-  TemplateEntityV1alpha1,
   LOCATION_ANNOTATION,
+  TemplateEntityV1alpha1,
 } from '@backstage/catalog-model';
+import { joinGitUrlPath, parseLocationAnnotation } from './helpers';
 
 describe('Helpers', () => {
   describe('parseLocationAnnotation', () => {
@@ -30,7 +30,7 @@ describe('Helpers', () => {
           name: 'graphql-starter',
           title: 'GraphQL Service',
           description:
-            'A GraphQL starter template for backstage to get you up and running\nthe best pracices with GraphQL\n',
+            'A GraphQL starter template for backstage to get you up and running\nthe best practices with GraphQL\n',
           uid: '9cf16bad-16e0-4213-b314-c4eec773c50b',
           etag: 'ZTkxMjUxMjUtYWY3Yi00MjU2LWFkYWMtZTZjNjU5ZjJhOWM2',
           generation: 1,
@@ -55,6 +55,7 @@ describe('Helpers', () => {
               },
             },
           },
+          owner: 'team-d@example.com',
         },
       };
 
@@ -78,7 +79,7 @@ describe('Helpers', () => {
           name: 'graphql-starter',
           title: 'GraphQL Service',
           description:
-            'A GraphQL starter template for backstage to get you up and running\nthe best pracices with GraphQL\n',
+            'A GraphQL starter template for backstage to get you up and running\nthe best practices with GraphQL\n',
           uid: '9cf16bad-16e0-4213-b314-c4eec773c50b',
           etag: 'ZTkxMjUxMjUtYWY3Yi00MjU2LWFkYWMtZTZjNjU5ZjJhOWM2',
           generation: 1,
@@ -103,16 +104,19 @@ describe('Helpers', () => {
               },
             },
           },
+          owner: 'team-b@example.com',
         },
       };
 
       expect(() => parseLocationAnnotation(mockEntity)).toThrow(
         expect.objectContaining({
-          name: 'InputError',
-          message: `Failure to parse either protocol or location for entity: ${mockEntity.metadata.name}`,
+          name: 'TypeError',
+          message:
+            "Unable to parse location reference ':https://github.com/o/r/blob/master/template.yaml', expected '<type>:<target>', e.g. 'url:https://host/path'",
         }),
       );
     });
+
     it('should throw an error when the location part is not set in the location annotation', () => {
       const mockEntity: TemplateEntityV1alpha1 = {
         apiVersion: 'backstage.io/v1alpha1',
@@ -124,7 +128,7 @@ describe('Helpers', () => {
           name: 'graphql-starter',
           title: 'GraphQL Service',
           description:
-            'A GraphQL starter template for backstage to get you up and running\nthe best pracices with GraphQL\n',
+            'A GraphQL starter template for backstage to get you up and running\nthe best practices with GraphQL\n',
           uid: '9cf16bad-16e0-4213-b314-c4eec773c50b',
           etag: 'ZTkxMjUxMjUtYWY3Yi00MjU2LWFkYWMtZTZjNjU5ZjJhOWM2',
           generation: 1,
@@ -149,13 +153,14 @@ describe('Helpers', () => {
               },
             },
           },
+          owner: 'team-a@example.com',
         },
       };
 
       expect(() => parseLocationAnnotation(mockEntity)).toThrow(
         expect.objectContaining({
-          name: 'InputError',
-          message: `Failure to parse either protocol or location for entity: ${mockEntity.metadata.name}`,
+          name: 'TypeError',
+          message: `Unable to parse location reference 'github:', expected '<type>:<target>', e.g. 'url:https://host/path'`,
         }),
       );
     });
@@ -196,6 +201,7 @@ describe('Helpers', () => {
               },
             },
           },
+          owner: 'team-b@example.com',
         },
       };
 
@@ -216,7 +222,7 @@ describe('Helpers', () => {
           name: 'graphql-starter',
           title: 'GraphQL Service',
           description:
-            'A GraphQL starter template for backstage to get you up and running\nthe best pracices with GraphQL\n',
+            'A GraphQL starter template for backstage to get you up and running\nthe best practices with GraphQL\n',
           uid: '9cf16bad-16e0-4213-b314-c4eec773c50b',
           etag: 'ZTkxMjUxMjUtYWY3Yi00MjU2LWFkYWMtZTZjNjU5ZjJhOWM2',
           generation: 1,
@@ -241,6 +247,7 @@ describe('Helpers', () => {
               },
             },
           },
+          owner: 'team-c@example.com',
         },
       };
 

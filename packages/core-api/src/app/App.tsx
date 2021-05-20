@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import { Config } from '@backstage/config';
 import React, {
   ComponentType,
   PropsWithChildren,
   ReactElement,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -48,22 +50,25 @@ import {
   routeElementDiscoverer,
   traverseElementTree,
 } from '../extensions/traversal';
-import { IconComponent, SystemIconKey, SystemIcons } from '../icons';
+import { IconComponent, IconComponentMap, IconKey } from '../icons';
 import { BackstagePlugin } from '../plugin';
-import { RouteRef } from '../routing';
+import { pluginCollector } from '../plugin/collectors';
+import { AnyRoutes } from '../plugin/types';
+import { RouteRef, ExternalRouteRef, SubRouteRef } from '../routing';
 import {
   routeObjectCollector,
   routeParentCollector,
   routePathCollector,
 } from '../routing/collectors';
-import { RoutingProvider, validateRoutes } from '../routing/hooks';
-import { ExternalRouteRef } from '../routing/RouteRef';
+import { RoutingProvider } from '../routing/hooks';
+import { validateRoutes } from '../routing/validation';
 import { AppContextProvider } from './AppContext';
 import { AppIdentity } from './AppIdentity';
 import { AppThemeProvider } from './AppThemeProvider';
 import {
   AppComponents,
   AppConfigLoader,
+  AppContext,
   AppOptions,
   AppRouteBinder,
   BackstageApp,
@@ -71,20 +76,24 @@ import {
   SignInResult,
 } from './types';
 
-export function generateBoundRoutes(
-  bindRoutes: AppOptions['bindRoutes'],
-): Map<ExternalRouteRef, RouteRef> {
-  const result = new Map<ExternalRouteRef, RouteRef>();
+export function generateBoundRoutes(bindRoutes: AppOptions['bindRoutes']) {
+  const result = new Map<ExternalRouteRef, RouteRef | SubRouteRef>();
 
   if (bindRoutes) {
-    const bind: AppRouteBinder = (externalRoutes, targetRoutes) => {
+    const bind: AppRouteBinder = (externalRoutes, targetRoutes: AnyRoutes) => {
       for (const [key, value] of Object.entries(targetRoutes)) {
         const externalRoute = externalRoutes[key];
         if (!externalRoute) {
           throw new Error(`Key ${key} is not an existing external route`);
         }
-
-        result.set(externalRoute, value);
+        if (!value && !externalRoute.optional) {
+          throw new Error(
+            `External route ${key} is required but was undefined`,
+          );
+        }
+        if (value) {
+          result.set(externalRoute, value);
+        }
       }
     };
     bindRoutes({ bind });
@@ -95,7 +104,7 @@ export function generateBoundRoutes(
 
 type FullAppOptions = {
   apis: Iterable<AnyApiFactory>;
-  icons: SystemIcons;
+  icons: IconComponentMap;
   plugins: BackstagePlugin<any, any>[];
   components: AppComponents;
   themes: AppTheme[];
@@ -139,13 +148,49 @@ function useConfigLoader(
   return { api: configReader };
 }
 
+class AppContextImpl implements AppContext {
+  constructor(private readonly app: PrivateAppImpl) {}
+
+  getPlugins(): BackstagePlugin<any, any>[] {
+    // eslint-disable-next-line no-console
+    console.warn('appContext.getPlugins() is deprecated and will be removed');
+    return this.app.getPlugins();
+  }
+
+  getSystemIcon(key: IconKey): IconComponent | undefined {
+    return this.app.getSystemIcon(key);
+  }
+
+  getComponents(): AppComponents {
+    return this.app.getComponents();
+  }
+
+  getProvider(): React.ComponentType<{}> {
+    // eslint-disable-next-line no-console
+    console.warn('appContext.getProvider() is deprecated and will be removed');
+    return this.app.getProvider();
+  }
+
+  getRouter(): React.ComponentType<{}> {
+    // eslint-disable-next-line no-console
+    console.warn('appContext.getRouter() is deprecated and will be removed');
+    return this.app.getRouter();
+  }
+
+  getRoutes(): JSX.Element[] {
+    // eslint-disable-next-line no-console
+    console.warn('appContext.getRoutes() is deprecated and will be removed');
+    return this.app.getRoutes();
+  }
+}
+
 export class PrivateAppImpl implements BackstageApp {
   private apiHolder?: ApiHolder;
   private configApi?: ConfigApi;
 
   private readonly apis: Iterable<AnyApiFactory>;
-  private readonly icons: SystemIcons;
-  private readonly plugins: BackstagePlugin<any, any>[];
+  private readonly icons: IconComponentMap;
+  private readonly plugins: Set<BackstagePlugin<any, any>>;
   private readonly components: AppComponents;
   private readonly themes: AppTheme[];
   private readonly configLoader?: AppConfigLoader;
@@ -157,7 +202,7 @@ export class PrivateAppImpl implements BackstageApp {
   constructor(options: FullAppOptions) {
     this.apis = options.apis;
     this.icons = options.icons;
-    this.plugins = options.plugins;
+    this.plugins = new Set(options.plugins);
     this.components = options.components;
     this.themes = options.themes;
     this.configLoader = options.configLoader;
@@ -166,17 +211,19 @@ export class PrivateAppImpl implements BackstageApp {
   }
 
   getPlugins(): BackstagePlugin<any, any>[] {
-    return this.plugins;
+    return Array.from(this.plugins);
   }
 
-  getSystemIcon(key: SystemIconKey): IconComponent {
+  getSystemIcon(key: IconKey): IconComponent | undefined {
     return this.icons[key];
+  }
+
+  getComponents(): AppComponents {
+    return this.components;
   }
 
   getRoutes(): JSX.Element[] {
     const routes = new Array<JSX.Element>();
-
-    const featureFlagsApi = this.getApiHolder().get(featureFlagsApiRef)!;
 
     const { NotFoundErrorPage } = this.components;
 
@@ -211,13 +258,6 @@ export class PrivateAppImpl implements BackstageApp {
             routes.push(<Navigate key={from.path} to={to.path} />);
             break;
           }
-          case 'feature-flag': {
-            featureFlagsApi.registerFlag({
-              name: output.name,
-              pluginId: plugin.getId(),
-            });
-            break;
-          }
           default:
             break;
         }
@@ -236,6 +276,8 @@ export class PrivateAppImpl implements BackstageApp {
   }
 
   getProvider(): ComponentType<{}> {
+    const appContext = new AppContextImpl(this);
+
     const Provider = ({ children }: PropsWithChildren<{}>) => {
       const appThemeApi = useMemo(
         () => AppThemeSelector.createWithStorage(this.themes),
@@ -250,10 +292,21 @@ export class PrivateAppImpl implements BackstageApp {
             routePaths: routePathCollector,
             routeParents: routeParentCollector,
             routeObjects: routeObjectCollector,
+            collectedPlugins: pluginCollector,
           },
         });
 
         validateRoutes(result.routePaths, result.routeParents);
+
+        // TODO(Rugvip): Restructure the public API so that we can get an immediate view of
+        //               the app, rather than having to wait for the provider to render.
+        //               For now we need to push the additional plugins we find during
+        //               collection and then make sure we initialize things afterwards.
+        result.collectedPlugins.forEach(plugin => this.plugins.add(plugin));
+        this.verifyPlugins(this.plugins);
+
+        // Initialize APIs once all plugins are available
+        this.getApiHolder();
 
         return result;
       }, [children]);
@@ -264,16 +317,42 @@ export class PrivateAppImpl implements BackstageApp {
         appThemeApi,
       );
 
+      const hasConfigApi = 'api' in loadedConfig;
+      if (hasConfigApi) {
+        const { api } = loadedConfig as { api: Config };
+        this.configApi = api;
+      }
+
+      useEffect(() => {
+        if (hasConfigApi) {
+          const featureFlagsApi = this.getApiHolder().get(featureFlagsApiRef)!;
+
+          for (const plugin of this.plugins.values()) {
+            for (const output of plugin.output()) {
+              switch (output.type) {
+                case 'feature-flag': {
+                  featureFlagsApi.registerFlag({
+                    name: output.name,
+                    pluginId: plugin.getId(),
+                  });
+                  break;
+                }
+                default:
+                  break;
+              }
+            }
+          }
+        }
+      }, [hasConfigApi, loadedConfig]);
+
       if ('node' in loadedConfig) {
         // Loading or error
         return loadedConfig.node;
       }
 
-      this.configApi = loadedConfig.api;
-
       return (
         <ApiProvider apis={this.getApiHolder()}>
-          <AppContextProvider app={this}>
+          <AppContextProvider appContext={appContext}>
             <AppThemeProvider>
               <RoutingProvider
                 routePaths={routePaths}
@@ -427,10 +506,15 @@ export class PrivateAppImpl implements BackstageApp {
     return this.apiHolder;
   }
 
-  verify() {
+  /**
+   * @deprecated
+   */
+  verify() {}
+
+  private verifyPlugins(plugins: Iterable<BackstagePlugin>) {
     const pluginIds = new Set<string>();
 
-    for (const plugin of this.plugins) {
+    for (const plugin of plugins) {
       const id = plugin.getId();
       if (pluginIds.has(id)) {
         throw new Error(`Duplicate plugin found '${id}'`);

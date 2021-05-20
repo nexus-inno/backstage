@@ -15,22 +15,26 @@
  */
 
 import { Entity } from '@backstage/catalog-model';
-import { InfoCard, Progress, useApi } from '@backstage/core';
+import {
+  InfoCard,
+  InfoCardVariants,
+  Progress,
+  ResponseErrorPanel,
+  useApi,
+} from '@backstage/core';
 import {
   catalogApiRef,
   isOwnerOf,
   useEntity,
 } from '@backstage/plugin-catalog-react';
-import { pageTheme } from '@backstage/theme';
+import { BackstageTheme, genPageTheme } from '@backstage/theme';
 import {
   Box,
   createStyles,
   Grid,
   makeStyles,
-  Theme,
   Typography,
 } from '@material-ui/core';
-import Alert from '@material-ui/lab/Alert';
 import React from 'react';
 import { useAsync } from 'react-use';
 
@@ -43,7 +47,17 @@ type EntitiesTypes =
   | 'api'
   | 'tool';
 
-const useStyles = makeStyles((theme: Theme) =>
+const createPageTheme = (
+  theme: BackstageTheme,
+  shapeKey: string,
+  colorsKey: string,
+) => {
+  const { colors } = theme.getPageTheme({ themeId: colorsKey });
+  const { shape } = theme.getPageTheme({ themeId: shapeKey });
+  return genPageTheme(colors, shape).backgroundImage;
+};
+
+const useStyles = makeStyles((theme: BackstageTheme) =>
   createStyles({
     card: {
       border: `1px solid ${theme.palette.divider}`,
@@ -60,22 +74,22 @@ const useStyles = makeStyles((theme: Theme) =>
       fontWeight: theme.typography.fontWeightBold,
     },
     service: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, ${pageTheme.service.colors})`,
+      background: createPageTheme(theme, 'home', 'service'),
     },
     website: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, ${pageTheme.website.colors})`,
+      background: createPageTheme(theme, 'home', 'website'),
     },
     library: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, ${pageTheme.library.colors})`,
+      background: createPageTheme(theme, 'home', 'library'),
     },
     documentation: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, ${pageTheme.documentation.colors})`,
+      background: createPageTheme(theme, 'home', 'documentation'),
     },
     api: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, #005B4B, #005B4B)`,
+      background: createPageTheme(theme, 'home', 'home'),
     },
     tool: {
-      background: `${pageTheme.home.shape}, linear-gradient(90deg, ${pageTheme.tool.colors})`,
+      background: createPageTheme(theme, 'home', 'tool'),
     },
   }),
 );
@@ -121,7 +135,7 @@ export const OwnershipCard = ({
 }: {
   /** @deprecated The entity is now grabbed from context instead */
   entity?: Entity;
-  variant: string;
+  variant?: InfoCardVariants;
 }) => {
   const { entity } = useEntity();
   const catalogApi = useApi(catalogApiRef);
@@ -130,7 +144,20 @@ export const OwnershipCard = ({
     error,
     value: componentsWithCounters,
   } = useAsync(async () => {
-    const entitiesList = await catalogApi.getEntities();
+    const kinds = ['Component', 'API'];
+    const entitiesList = await catalogApi.getEntities({
+      filter: {
+        kind: kinds,
+      },
+      fields: [
+        'kind',
+        'metadata.name',
+        'metadata.namespace',
+        'spec.type',
+        'relations',
+      ],
+    });
+
     const ownedEntitiesList = entitiesList.items.filter(component =>
       isOwnerOf(entity, component),
     );
@@ -171,12 +198,12 @@ export const OwnershipCard = ({
         name: 'Tools',
       },
     ] as Array<{ counter: number; className: EntitiesTypes; name: string }>;
-  }, [catalogApi]);
+  }, [catalogApi, entity]);
 
   if (loading) {
     return <Progress />;
   } else if (error) {
-    return <Alert severity="error">{error.message}</Alert>;
+    return <ResponseErrorPanel error={error} />;
   }
 
   return (

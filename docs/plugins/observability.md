@@ -10,18 +10,13 @@ Backstage integrator.
 
 ## Google Analytics
 
-There is a basic Google Analytics integration built into Backstage. You can
-enable it by adding the following to your app configuration:
+See how to install Google Analytics in your app
+[here](../integrations/google-analytics/installation.md)
 
-```yaml
-app:
-  googleAnalyticsTrackingId: UA-000000-0
-```
+## Datadog RUM Events
 
-Replace the tracking ID with your own.
-
-For more information, learn about Google Analytics
-[here](https://marketingplatform.google.com/about/analytics/).
+See how to install Datadog Events in your app
+[here](../integrations/datadog-rum/installation.md)
 
 ## Logging
 

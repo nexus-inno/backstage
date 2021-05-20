@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  Entity,
-  RELATION_CONSUMES_API,
-  RELATION_OWNED_BY,
-  RELATION_PART_OF,
-} from '@backstage/catalog-model';
+import { Entity, RELATION_CONSUMES_API } from '@backstage/catalog-model';
 import { ApiProvider, ApiRegistry } from '@backstage/core';
 import {
   CatalogApi,
@@ -79,7 +74,7 @@ describe('<ConsumedApisCard />', () => {
     );
 
     expect(getByText(/Consumed APIs/i)).toBeInTheDocument();
-    expect(getByText(/No APIs consumed by this entity/i)).toBeInTheDocument();
+    expect(getByText(/does not consume any APIs/i)).toBeInTheDocument();
   });
 
   it('shows consumed APIs', async () => {
@@ -101,41 +96,18 @@ describe('<ConsumedApisCard />', () => {
         },
       ],
     };
-    catalogApi.getEntityByName.mockResolvedValue({
-      apiVersion: 'v1',
-      kind: 'API',
-      metadata: {
-        name: 'target-name',
-        namespace: 'my-namespace',
-      },
-      spec: {
-        type: 'openapi',
-        lifecycle: 'production',
-        definition: '...',
-      },
-      relations: [
+    catalogApi.getEntities.mockResolvedValue({
+      items: [
         {
-          type: RELATION_PART_OF,
-          target: {
-            kind: 'System',
-            name: 'MySystem',
-            namespace: 'default',
+          apiVersion: 'v1',
+          kind: 'API',
+          metadata: {
+            name: 'target-name',
+            namespace: 'my-namespace',
           },
-        },
-        {
-          type: RELATION_OWNED_BY,
-          target: {
-            kind: 'Group',
-            name: 'Test',
-            namespace: 'default',
-          },
+          spec: {},
         },
       ],
-    });
-    apiDocsConfig.getApiDefinitionWidget.mockReturnValue({
-      type: 'openapi',
-      title: 'OpenAPI',
-      component: () => <div />,
     });
 
     const { getByText } = await renderInTestApp(
@@ -147,12 +119,8 @@ describe('<ConsumedApisCard />', () => {
     );
 
     await waitFor(() => {
-      expect(getByText(/Consumed APIs/i)).toBeInTheDocument();
+      expect(getByText('Consumed APIs')).toBeInTheDocument();
       expect(getByText(/target-name/i)).toBeInTheDocument();
-      expect(getByText(/OpenAPI/)).toBeInTheDocument();
-      expect(getByText(/Test/i)).toBeInTheDocument();
-      expect(getByText(/MySystem/i)).toBeInTheDocument();
-      expect(getByText(/production/i)).toBeInTheDocument();
     });
   });
 });

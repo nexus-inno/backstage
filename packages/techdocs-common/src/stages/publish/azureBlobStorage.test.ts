@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mockFs from 'mock-fs';
-import { ConfigReader } from '@backstage/config';
+
 import { getVoidLogger } from '@backstage/backend-common';
+import {
+  Entity,
+  EntityName,
+  ENTITY_DEFAULT_NAMESPACE,
+} from '@backstage/catalog-model';
+import { ConfigReader } from '@backstage/config';
+import express from 'express';
+import request from 'supertest';
+import mockFs from 'mock-fs';
+import os from 'os';
+import path from 'path';
 import { AzureBlobStoragePublish } from './azureBlobStorage';
-import { PublisherBase } from './types';
-import type { Entity } from '@backstage/catalog-model';
+import { PublisherBase, TechDocsMetadata } from './types';
+
+// NOTE: /packages/techdocs-common/__mocks__ is being used to mock Azure client library
 
 const createMockEntity = (annotations = {}) => {
   return {
@@ -34,13 +45,21 @@ const createMockEntity = (annotations = {}) => {
   };
 };
 
+const createMockEntityName = (): EntityName => ({
+  kind: 'TestKind',
+  name: 'test-component-name',
+  namespace: 'test-namespace',
+});
+
+const rootDir = os.platform() === 'win32' ? 'C:\\rootDir' : '/rootDir';
+
 const getEntityRootDir = (entity: Entity) => {
   const {
     kind,
     metadata: { namespace, name },
   } = entity;
-  const entityRootDir = `${namespace}/${kind}/${name}`;
-  return entityRootDir;
+
+  return path.join(rootDir, namespace || ENTITY_DEFAULT_NAMESPACE, kind, name);
 };
 
 const logger = getVoidLogger();
@@ -48,8 +67,8 @@ jest.spyOn(logger, 'info').mockReturnValue(logger);
 jest.spyOn(logger, 'error').mockReturnValue(logger);
 
 let publisher: PublisherBase;
-
 beforeEach(async () => {
+  mockFs.restore();
   const mockConfig = new ConfigReader({
     techdocs: {
       requestUrl: 'http://localhost:7000',
@@ -66,12 +85,53 @@ beforeEach(async () => {
     },
   });
 
-  publisher = await AzureBlobStoragePublish.fromConfig(mockConfig, logger);
+  publisher = AzureBlobStoragePublish.fromConfig(mockConfig, logger);
 });
 
-describe('AzureBlobStoragePublish', () => {
+describe('publishing with valid credentials', () => {
+  describe('getReadiness', () => {
+    it('should validate correct config', async () => {
+      expect(await publisher.getReadiness()).toEqual({
+        isAvailable: true,
+      });
+    });
+
+    it('should reject incorrect config', async () => {
+      const mockConfig = new ConfigReader({
+        techdocs: {
+          requestUrl: 'http://localhost:7000',
+          publisher: {
+            type: 'azureBlobStorage',
+            azureBlobStorage: {
+              credentials: {
+                accountName: 'accountName',
+                accountKey: 'accountKey',
+              },
+              containerName: 'bad_container',
+            },
+          },
+        },
+      });
+
+      const errorPublisher = await AzureBlobStoragePublish.fromConfig(
+        mockConfig,
+        logger,
+      );
+
+      expect(await errorPublisher.getReadiness()).toEqual({
+        isAvailable: false,
+      });
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Could not retrieve metadata about the Azure Blob Storage container bad_container.`,
+        ),
+      );
+    });
+  });
+
   describe('publish', () => {
-    it('should publish a directory', async () => {
+    beforeEach(() => {
       const entity = createMockEntity();
       const entityRootDir = getEntityRootDir(entity);
 
@@ -84,6 +144,11 @@ describe('AzureBlobStoragePublish', () => {
           },
         },
       });
+    });
+
+    it('should publish a directory', async () => {
+      const entity = createMockEntity();
+      const entityRootDir = getEntityRootDir(entity);
 
       expect(
         await publisher.publish({
@@ -95,30 +160,84 @@ describe('AzureBlobStoragePublish', () => {
     });
 
     it('should fail to publish a directory', async () => {
-      const wrongPathToGeneratedDirectory = 'wrong/path/to/generatedDirectory';
+      const wrongPathToGeneratedDirectory = path.join(
+        rootDir,
+        'wrong',
+        'path',
+        'to',
+        'generatedDirectory',
+      );
+
+      const entity = createMockEntity();
+
+      const fails = publisher.publish({
+        entity,
+        directory: wrongPathToGeneratedDirectory,
+      });
+
+      await expect(fails).rejects.toMatchObject({
+        message: expect.stringContaining(
+          `Unable to upload file(s) to Azure Blob Storage. Error: Failed to read template directory: ENOENT, no such file or directory`,
+        ),
+      });
+      await expect(fails).rejects.toMatchObject({
+        message: expect.stringContaining(wrongPathToGeneratedDirectory),
+      });
+
+      mockFs.restore();
+    });
+
+    it('reports an error when bad account credentials', async () => {
+      const mockConfig = new ConfigReader({
+        techdocs: {
+          requestUrl: 'http://localhost:7000',
+          publisher: {
+            type: 'azureBlobStorage',
+            azureBlobStorage: {
+              credentials: {
+                accountName: 'failupload',
+                accountKey: 'accountKey',
+              },
+              containerName: 'containerName',
+            },
+          },
+        },
+      });
+
+      publisher = await AzureBlobStoragePublish.fromConfig(mockConfig, logger);
+
       const entity = createMockEntity();
       const entityRootDir = getEntityRootDir(entity);
 
       mockFs({
         [entityRootDir]: {
           'index.html': '',
-          '404.html': '',
-          assets: {
-            'main.css': '',
-          },
         },
       });
 
-      await publisher
-        .publish({
+      let error;
+      try {
+        await publisher.publish({
           entity,
-          directory: wrongPathToGeneratedDirectory,
-        })
-        .catch(error =>
-          expect(error.message).toContain(
-            'Unable to upload file(s) to Azure Blob Storage. Error Failed to read template directory: ENOENT, no such file or directory',
-          ),
-        );
+          directory: entityRootDir,
+        });
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error.message).toContain(
+        `Unable to upload file(s) to Azure Blob Storage.`,
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Unable to upload file(s) to Azure Blob Storage. Error: Upload failed for ${path.join(
+            entityRootDir,
+            'index.html',
+          )} with status code 500`,
+        ),
+      );
+
       mockFs.restore();
     });
   });
@@ -142,6 +261,119 @@ describe('AzureBlobStoragePublish', () => {
       const entity = createMockEntity();
 
       expect(await publisher.hasDocsBeenGenerated(entity)).toBe(false);
+    });
+  });
+
+  describe('fetchTechDocsMetadata', () => {
+    it('should return tech docs metadata', async () => {
+      const entityNameMock = createMockEntityName();
+      const entity = createMockEntity();
+      const entityRootDir = getEntityRootDir(entity);
+
+      mockFs({
+        [entityRootDir]: {
+          'techdocs_metadata.json':
+            '{"site_name": "backstage", "site_description": "site_content", "etag": "etag"}',
+        },
+      });
+      const expectedMetadata: TechDocsMetadata = {
+        site_name: 'backstage',
+        site_description: 'site_content',
+        etag: 'etag',
+      };
+      expect(
+        await publisher.fetchTechDocsMetadata(entityNameMock),
+      ).toStrictEqual(expectedMetadata);
+      mockFs.restore();
+    });
+
+    it('should return tech docs metadata when json encoded with single quotes', async () => {
+      const entityNameMock = createMockEntityName();
+      const entity = createMockEntity();
+      const entityRootDir = getEntityRootDir(entity);
+
+      mockFs({
+        [entityRootDir]: {
+          'techdocs_metadata.json': `{'site_name': 'backstage', 'site_description': 'site_content', 'etag': 'etag'}`,
+        },
+      });
+
+      const expectedMetadata: TechDocsMetadata = {
+        site_name: 'backstage',
+        site_description: 'site_content',
+        etag: 'etag',
+      };
+      expect(
+        await publisher.fetchTechDocsMetadata(entityNameMock),
+      ).toStrictEqual(expectedMetadata);
+      mockFs.restore();
+    });
+
+    it('should return an error if the techdocs_metadata.json file is not present', async () => {
+      const entityNameMock = createMockEntityName();
+      const entity = createMockEntity();
+      const entityRootDir = getEntityRootDir(entity);
+
+      let error;
+      try {
+        await publisher.fetchTechDocsMetadata(entityNameMock);
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toEqual(
+        new Error(
+          `TechDocs metadata fetch failed, The file ${path.join(
+            entityRootDir,
+            'techdocs_metadata.json',
+          )} does not exist !`,
+        ),
+      );
+    });
+  });
+
+  describe('docsRouter', () => {
+    let app: express.Express;
+    const entity = createMockEntity();
+    const entityRootDir = getEntityRootDir(entity);
+
+    beforeEach(() => {
+      app = express().use(publisher.docsRouter());
+
+      mockFs.restore();
+      mockFs({
+        [entityRootDir]: {
+          img: {
+            'with spaces.png': 'found it',
+          },
+          'some folder': {
+            'also with spaces.js': 'found it too',
+          },
+        },
+      });
+    });
+
+    afterEach(() => {
+      mockFs.restore();
+    });
+
+    it('should pass expected object path to bucket', async () => {
+      const {
+        kind,
+        metadata: { namespace, name },
+      } = entity;
+
+      // Ensures leading slash is trimmed and encoded path is decoded.
+      const pngResponse = await request(app).get(
+        `/${namespace}/${kind}/${name}/img/with%20spaces.png`,
+      );
+      expect(Buffer.from(pngResponse.body).toString('utf8')).toEqual(
+        'found it',
+      );
+      const jsResponse = await request(app).get(
+        `/${namespace}/${kind}/${name}/some%20folder/also%20with%20spaces.js`,
+      );
+      expect(jsResponse.text).toEqual('found it too');
     });
   });
 });

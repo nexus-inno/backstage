@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import { resolve as resolvePath } from 'path';
-import { JsonValue } from '@backstage/config';
+import { resolve as resolvePath, dirname } from 'path';
 import { TemplateEntityV1alpha1 } from '@backstage/catalog-model';
-import { Logger } from 'winston';
-import type { Writable } from 'stream';
-
+import parseGitUrl from 'git-url-parse';
 import { TaskSpec } from './types';
-import { ConflictError, NotFoundError } from '@backstage/backend-common';
 import {
   getTemplaterKey,
   joinGitUrlPath,
@@ -31,7 +27,7 @@ import {
 
 export function templateEntityToSpec(
   template: TemplateEntityV1alpha1,
-  values: TemplaterValues,
+  inputValues: TemplaterValues,
 ): TaskSpec {
   const steps: TaskSpec['steps'] = [];
 
@@ -39,7 +35,7 @@ export function templateEntityToSpec(
 
   let url: string;
   if (protocol === 'file') {
-    const path = resolvePath(location, template.spec.path || '.');
+    const path = resolvePath(dirname(location), template.spec.path || '.');
 
     url = `file://${path}`;
   } else {
@@ -47,11 +43,18 @@ export function templateEntityToSpec(
   }
   const templater = getTemplaterKey(template);
 
+  const values = {
+    ...inputValues,
+    destination: {
+      git: parseGitUrl(inputValues.storePath),
+    },
+  } as TemplaterValues;
+
   steps.push({
     id: 'prepare',
     name: 'Prepare',
     action: 'legacy:prepare',
-    parameters: {
+    input: {
       protocol,
       url,
     },
@@ -61,7 +64,7 @@ export function templateEntityToSpec(
     id: 'template',
     name: 'Template',
     action: 'legacy:template',
-    parameters: {
+    input: {
       templater,
       values,
     },
@@ -69,49 +72,30 @@ export function templateEntityToSpec(
 
   steps.push({
     id: 'publish',
-    name: 'Publishing',
+    name: 'Publish',
     action: 'legacy:publish',
-    parameters: {
+    input: {
       values,
     },
   });
 
-  return { steps };
-}
+  steps.push({
+    id: 'register',
+    name: 'Register',
+    action: 'catalog:register',
+    input: {
+      catalogInfoUrl: '{{ steps.publish.output.catalogInfoUrl }}',
+    },
+  });
 
-type ActionContext = {
-  logger: Logger;
-  logStream: Writable;
-
-  workspacePath: string;
-  parameters: { [name: string]: JsonValue };
-  output(name: string, value: JsonValue): void;
-};
-
-type TemplateAction = {
-  id: string;
-  handler: (ctx: ActionContext) => Promise<void>;
-};
-
-export class TemplateActionRegistry {
-  private readonly actions = new Map<string, TemplateAction>();
-
-  register(action: TemplateAction) {
-    if (this.actions.has(action.id)) {
-      throw new ConflictError(
-        `Template action with ID '${action.id}' has already been registered`,
-      );
-    }
-    this.actions.set(action.id, action);
-  }
-
-  get(actionId: string): TemplateAction {
-    const action = this.actions.get(actionId);
-    if (!action) {
-      throw new NotFoundError(
-        `Template action with ID '${actionId}' is not registered.`,
-      );
-    }
-    return action;
-  }
+  return {
+    baseUrl: undefined, // not used by legacy actions
+    values: {},
+    steps,
+    output: {
+      remoteUrl: '{{ steps.publish.output.remoteUrl }}',
+      catalogInfoUrl: '{{ steps.register.output.catalogInfoUrl }}',
+      entityRef: '{{ steps.register.output.entityRef }}',
+    },
+  };
 }

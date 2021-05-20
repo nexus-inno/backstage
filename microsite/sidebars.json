@@ -12,9 +12,8 @@
     ],
     "Getting Started": [
       "getting-started/index",
-      "getting-started/running-backstage-locally",
-      "getting-started/development-environment",
       "getting-started/create-an-app",
+      "getting-started/running-backstage-locally",
       {
         "type": "subcategory",
         "label": "App configuration",
@@ -23,27 +22,12 @@
           "getting-started/app-custom-theme"
         ]
       },
-      {
-        "type": "subcategory",
-        "label": "Deployment",
-        "ids": [
-          "getting-started/deployment-k8s",
-          "getting-started/deployment-helm",
-          "getting-started/deployment-other"
-        ]
-      }
+      "getting-started/keeping-backstage-updated",
+      "getting-started/concepts",
+      "getting-started/contributors"
     ],
     "CLI": ["cli/index", "cli/commands"],
     "Core Features": [
-      {
-        "type": "subcategory",
-        "label": "Kubernetes",
-        "ids": [
-          "features/kubernetes/overview",
-          "features/kubernetes/installation",
-          "features/kubernetes/configuration"
-        ]
-      },
       {
         "type": "subcategory",
         "label": "Software Catalog",
@@ -56,10 +40,20 @@
           "features/software-catalog/references",
           "features/software-catalog/well-known-annotations",
           "features/software-catalog/well-known-relations",
+          "features/software-catalog/well-known-statuses",
           "features/software-catalog/extending-the-model",
           "features/software-catalog/external-integrations",
-          "features/software-catalog/kubernetes-in-backstage",
           "features/software-catalog/software-catalog-api"
+        ]
+      },
+      {
+        "type": "subcategory",
+        "label": "Kubernetes",
+        "ids": [
+          "features/kubernetes/overview",
+          "features/kubernetes/installation",
+          "features/kubernetes/configuration",
+          "features/kubernetes/troubleshooting"
         ]
       },
       {
@@ -69,10 +63,11 @@
           "features/software-templates/software-templates-index",
           "features/software-templates/installation",
           "features/software-templates/adding-templates",
-          "features/software-templates/extending/extending-index",
-          "features/software-templates/extending/extending-templater",
-          "features/software-templates/extending/extending-publisher",
-          "features/software-templates/extending/extending-preparer"
+          "features/software-templates/writing-templates",
+          "features/software-templates/builtin-actions",
+          "features/software-templates/writing-custom-actions",
+          "features/software-templates/template-legacy",
+          "features/software-templates/migrating-from-v1alpha1-to-v1beta2"
         ]
       },
       {
@@ -101,6 +96,56 @@
         ]
       }
     ],
+    "Integrations": [
+      "integrations/index",
+      {
+        "type": "subcategory",
+        "label": "Azure DevOps",
+        "ids": ["integrations/azure/locations"]
+      },
+      {
+        "type": "subcategory",
+        "label": "Bitbucket",
+        "ids": [
+          "integrations/bitbucket/locations",
+          "integrations/bitbucket/discovery"
+        ]
+      },
+      {
+        "type": "subcategory",
+        "label": "Datadog",
+        "ids": ["integrations/datadog-rum/installation"]
+      },
+      {
+        "type": "subcategory",
+        "label": "GitHub",
+        "ids": [
+          "integrations/github/locations",
+          "integrations/github/discovery",
+          "integrations/github/org"
+        ]
+      },
+      {
+        "type": "subcategory",
+        "label": "GitLab",
+        "ids": ["integrations/gitlab/locations"]
+      },
+      {
+        "type": "subcategory",
+        "label": "Google Analytics",
+        "ids": ["integrations/google-analytics/installation"]
+      },
+      {
+        "type": "subcategory",
+        "label": "Google GCS",
+        "ids": ["integrations/google-cloud-storage/locations"]
+      },
+      {
+        "type": "subcategory",
+        "label": "LDAP",
+        "ids": ["integrations/ldap/org"]
+      }
+    ],
     "Plugins": [
       "plugins/index",
       "plugins/existing-plugins",
@@ -115,7 +160,8 @@
         "ids": [
           "plugins/proxying",
           "plugins/backend-plugin",
-          "plugins/call-existing-api"
+          "plugins/call-existing-api",
+          "plugins/github-apps"
         ]
       },
       {
@@ -142,13 +188,33 @@
     ],
     "Auth and identity": [
       "auth/index",
+      {
+        "type": "subcategory",
+        "label": "Included providers",
+        "ids": [
+          "auth/auth0/provider",
+          "auth/microsoft/provider",
+          "auth/github/provider",
+          "auth/gitlab/provider",
+          "auth/google/provider",
+          "auth/okta/provider",
+          "auth/onelogin/provider"
+        ]
+      },
       "auth/add-auth-provider",
+      "auth/using-auth",
       "auth/auth-backend",
       "auth/oauth",
-      "auth/glossary",
-      "auth/auth-backend-classes"
+      "auth/auth-backend-classes",
+      "auth/glossary"
     ],
-
+    "Deployment": [
+      "deployment/index",
+      "deployment/docker",
+      "deployment/k8s",
+      "deployment/helm",
+      "deployment/heroku"
+    ],
     "Designing for Backstage": [
       "dls/design",
       "dls/contributing-to-storybook",
@@ -162,8 +228,7 @@
           "api/utility-apis",
           "reference/utility-apis/README",
           "reference/createPlugin",
-          "reference/createPlugin-feature-flags",
-          "reference/createPlugin-router"
+          "reference/createPlugin-feature-flags"
         ]
       },
       {
@@ -175,7 +240,8 @@
     "Tutorials": [
       "tutorials/journey",
       "tutorials/quickstart-app-auth",
-      "tutorials/quickstart-app-plugin"
+      "tutorials/quickstart-app-plugin",
+      "tutorials/switching-sqlite-postgres"
     ],
     "Architecture Decision Records (ADRs)": [
       "architecture-decisions/adrs-overview",
@@ -191,7 +257,6 @@
       "architecture-decisions/adrs-adr010",
       "architecture-decisions/adrs-adr011"
     ],
-    "Contribute": ["../CONTRIBUTING"],
     "Support": ["support/support", "support/project-structure"],
     "Glossary": ["glossary"],
     "FAQ": ["FAQ"]

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { ClusterDetails, KubernetesClustersSupplier } from '..';
 import { Config } from '@backstage/config';
+import { ClusterDetails, KubernetesClustersSupplier } from '../types/types';
 
 export class ConfigClusterLocator implements KubernetesClustersSupplier {
   private readonly clusterDetails: ClusterDetails[];
@@ -24,15 +24,16 @@ export class ConfigClusterLocator implements KubernetesClustersSupplier {
     this.clusterDetails = clusterDetails;
   }
 
-  static fromConfig(config: Config[]): ConfigClusterLocator {
+  static fromConfig(config: Config): ConfigClusterLocator {
     // TODO: Add validation that authProvider is required and serviceAccountToken
     // is required if authProvider is serviceAccount
     return new ConfigClusterLocator(
-      config.map(c => {
+      config.getConfigArray('clusters').map(c => {
         return {
           name: c.getString('name'),
           url: c.getString('url'),
           serviceAccountToken: c.getOptionalString('serviceAccountToken'),
+          skipTLSVerify: c.getOptionalBoolean('skipTLSVerify') ?? false,
           authProvider: c.getString('authProvider'),
         };
       }),
